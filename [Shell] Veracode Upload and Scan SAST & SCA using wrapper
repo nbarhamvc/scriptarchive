@@ -1,2 +1,2 @@
 curl -O https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.1.10.5/vosp-api-wrappers-java-23.1.10.5.jar
-java -jar vosp-api-wrappers-java-23.1.10.5.jar -vid $VERACODE_API_ID -vkey $VERACODE_API_KEY -action UploadandScan -appname <INSERT APP NAME> -createprofile false -filepath ./target/verademo.war
+java -jar vosp-api-wrappers-java-23.1.10.5.jar -vid $VERACODE_API_ID -vkey $VERACODE_API_KEY -action UploadandScan -appname <INSERT APP NAME> -createprofile false -version $BUILD_ID -filepath ./target/verademo.war
