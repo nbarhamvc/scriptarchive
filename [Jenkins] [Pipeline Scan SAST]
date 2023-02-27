@@ -1,4 +1,7 @@
-#
+# Jenkins configuration:
+#   Uses Pipeline build
+#   Pipeline Script with 'Groovy Sandbox' checkbox enabled, needs Groovy plugin installing
+#   Veracode Credentials Binding plugin used for $VERACODE_API_ID and $VERACODE_API_KEY
 
 pipeline {
 agent any
