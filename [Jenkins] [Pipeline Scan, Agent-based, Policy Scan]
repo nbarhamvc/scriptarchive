@@ -70,7 +70,7 @@ pipeline {
                 echo 'App name: '+"${VERACODE_APP_NAME}"
                 echo 'Scan name: Verademo_'+"${TIME_STAMP}"
                 echo 'Veracode scanning'
-                withCredentials([usernamePassword(credentialsId: '58913a3a-0e41-42f9-812d-22a40c34b8f7', passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
+                withCredentials([usernamePassword(credentialsId: <INSERT CREDS>, passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
     // some block
                 veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', canFailJob: true, debug: false, deleteIncompleteScanLevel: '0', scanIncludesPattern: '**.war', scanName: "Verademo_${TIME_STAMP}", timeout: 60, uploadIncludesPattern: '**/**.war', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
                 }
