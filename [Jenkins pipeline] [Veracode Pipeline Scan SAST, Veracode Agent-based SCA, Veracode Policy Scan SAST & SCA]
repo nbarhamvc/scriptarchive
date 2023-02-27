@@ -31,11 +31,13 @@ pipeline {
         
         stage('Veracode Agent-based SCA') {
             steps {
-                script {
-                    sh 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
-                    }
-                    }
-            }
+                    withCredentials([string(credentialsId: 'SRCCLR_API_TOKEN', variable: 'SRCCLR_API_TOKEN')]) {
+                        script {
+                            sh 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
+                                }
+                        }
+                }
+        }
         
 
         stage('Veracode Pipeline Scan SAST') {
