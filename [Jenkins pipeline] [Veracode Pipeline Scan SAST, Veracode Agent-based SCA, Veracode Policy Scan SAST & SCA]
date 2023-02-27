@@ -1,8 +1,7 @@
 # Jenkins configuration:
 #   Uses Pipeline build
 #   Pipeline Script with 'Groovy Sandbox' checkbox enabled, needs Groovy plugin installing
-#   Veracode Credentials Binding plugin used for Upload & Scan
-#   $VERACODE_API_ID, $VERACODE_API_KEY and $SRCCLR_API_TOKEN set as global env variables
+#   Veracode Credentials Binding plugin used, if not requires setting $VERACODE_API_ID, $VERACODE_API_KEY and $SRCCLR_API_TOKEN as env variables
 
 pipeline {
     agent any
@@ -18,7 +17,7 @@ pipeline {
         
 	stage('Veracode Agent-based SCA') {
             steps {
-                    withCredentials([string(credentialsId: 'SRCCLR_API_TOKEN', variable: 'SRCCLR_API_TOKEN')]) {
+                    withCredentials([string(credentialsId: '<insert binding credsid>', variable: 'SRCCLR_API_TOKEN')]) {
                         script {
                             sh 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
                                 }
@@ -41,7 +40,7 @@ pipeline {
 
         stage('Veracode Pipeline Scan SAST') {
 			steps {
-				withCredentials([ usernamePassword (credentialsId: <insert credsid>, usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
+				withCredentials([ usernamePassword (credentialsId: '<insert binding credsid>', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
 					script {
 					try {
 						sh 'curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip'
@@ -71,7 +70,7 @@ pipeline {
                 echo 'App name: '+"${VERACODE_APP_NAME}"
                 echo 'Scan name: Verademo_'+"${TIME_STAMP}"
                 echo 'Veracode scanning'
-                withCredentials([usernamePassword(credentialsId: <INSERT CREDS>, passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
+                withCredentials([usernamePassword(credentialsId: '<insert binding credsid>', passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
     // some block
                 veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', canFailJob: true, debug: false, deleteIncompleteScanLevel: '0', scanIncludesPattern: '**.war', scanName: "Verademo_${TIME_STAMP}", timeout: 60, uploadIncludesPattern: '**/**.war', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
                 }
