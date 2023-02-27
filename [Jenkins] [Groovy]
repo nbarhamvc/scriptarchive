@@ -1,0 +1,81 @@
+# Jenkins configuration:
+#   Uses Pipeline build
+#   Pipeline Script with 'Groovy Sandbox' checkbox enabled
+#   Veracode Credentials Binding plugin used for Upload & Scan
+#   $VERACODE_API_ID, $VERACODE_API_KEY and $SRCCLR_API_TOKEN set as global env variables
+
+pipeline {
+    agent any
+    environment {
+        VERACODE_APP_NAME = "verademo-github"
+        TIME_STAMP = Calendar.getInstance().getTime().format('YYYY-MM-dd-hh:mm:ss',TimeZone.getTimeZone('CST'))
+    }
+    tools {
+        // Install the Maven version configured as "M3" and add it to the path.
+        maven "3.8.6"
+    }
+    stages {
+        stage('App Build') {
+            steps {
+                echo 'Application name = "${VERACODE_APP_NAME}"'
+                echo 'Scan name = Verademo_"${TIME_STAMP}"'
+                // Get some code from a GitHub repository
+                git branch: 'main', url: 'https://gitlab.com/vcnbarham/verademo-gitlab.git'
+                // Maven build
+                dir (".") {
+                    sh "mvn clean package"
+                }
+            }
+        }
+    
+        
+        stage('Veracode Agent-based SCA') {
+            steps {
+                script {
+                    sh 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
+                    }
+                    }
+            }
+        
+
+        stage('Veracode Pipeline Scan SAST') {
+			steps {
+				withCredentials([ usernamePassword (credentialsId: '58913a3a-0e41-42f9-812d-22a40c34b8f7', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
+					script {
+					try {
+						sh 'curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip'
+						sh 'unzip -u pipeline-scan-LATEST.zip pipeline-scan.jar'
+						sh 'java -jar pipeline-scan.jar \
+						--veracode_api_id ${VERACODE_API_ID} \
+						--veracode_api_key ${VERACODE_API_KEY} \
+						--file "target/verademo.war"'
+						} catch (err) {
+							echo 'Error code: ' + err.getMessage().substring(26)
+						}
+					}
+				}
+				echo 'Pipeline scan completed (failures ignored - results available in ${WORKSPACE}/results.json)'
+			}
+		
+	post {
+		always {
+		  archiveArtifacts artifacts: 'results.json', fingerprint: true
+		}
+	}
+        }
+        
+        
+        stage ("Veracode Upload and Scan SAST, SCA") {
+            steps {
+                echo 'App name: '+"${VERACODE_APP_NAME}"
+                echo 'Scan name: Verademo_'+"${TIME_STAMP}"
+                echo 'Veracode scanning'
+                withCredentials([usernamePassword(credentialsId: '58913a3a-0e41-42f9-812d-22a40c34b8f7', passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
+    // some block
+                veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', canFailJob: true, debug: false, deleteIncompleteScanLevel: '0', scanIncludesPattern: '**.war', scanName: "Verademo_${TIME_STAMP}", timeout: 60, uploadIncludesPattern: '**/**.war', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
+                }
+                
+            }
+        }
+    }
+}
