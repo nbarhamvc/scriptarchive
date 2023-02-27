@@ -15,7 +15,18 @@ pipeline {
         maven "3.8.6"
     }
     stages {
-        stage('App Build') {
+        
+	stage('Veracode Agent-based SCA') {
+            steps {
+                    withCredentials([string(credentialsId: 'SRCCLR_API_TOKEN', variable: 'SRCCLR_API_TOKEN')]) {
+                        script {
+                            sh 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
+                                }
+                        }
+                }
+        }
+	
+	stage('App Build') {
             steps {
                 echo 'Application name = "${VERACODE_APP_NAME}"'
                 echo 'Scan name = Verademo_"${TIME_STAMP}"'
@@ -26,19 +37,7 @@ pipeline {
                     sh "mvn clean package"
                 }
             }
-        }
-    
-        
-        stage('Veracode Agent-based SCA') {
-            steps {
-                    withCredentials([string(credentialsId: 'SRCCLR_API_TOKEN', variable: 'SRCCLR_API_TOKEN')]) {
-                        script {
-                            sh 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
-                                }
-                        }
-                }
-        }
-        
+        }    
 
         stage('Veracode Pipeline Scan SAST') {
 			steps {
