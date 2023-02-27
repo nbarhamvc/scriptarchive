@@ -1,6 +1,6 @@
 # Jenkins configuration:
 #   Uses Pipeline build
-#   Pipeline Script with 'Groovy Sandbox' checkbox enabled
+#   Pipeline Script with 'Groovy Sandbox' checkbox enabled, needs Groovy plugin installing
 #   Veracode Credentials Binding plugin used for Upload & Scan
 #   $VERACODE_API_ID, $VERACODE_API_KEY and $SRCCLR_API_TOKEN set as global env variables
 
@@ -40,7 +40,7 @@ pipeline {
 
         stage('Veracode Pipeline Scan SAST') {
 			steps {
-				withCredentials([ usernamePassword (credentialsId: '58913a3a-0e41-42f9-812d-22a40c34b8f7', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
+				withCredentials([ usernamePassword (credentialsId: <insert credsid>, usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
 					script {
 					try {
 						sh 'curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip'
