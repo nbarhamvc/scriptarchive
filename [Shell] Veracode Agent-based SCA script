@@ -1,0 +1,3 @@
+# Use credentials binding in Jenkins as secret text
+
+curl -sSL https://download.sourceclear.com/ci.sh | sh
