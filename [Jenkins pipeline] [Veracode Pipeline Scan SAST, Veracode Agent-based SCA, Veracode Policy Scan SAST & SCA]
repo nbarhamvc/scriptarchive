@@ -65,7 +65,7 @@ pipeline {
 	}
         }
         
-        stage ("Veracode Upload and Scan SAST, SCA") {
+        stage ("Veracode Upload and Scan SAST, SCA - Policy or Sandbox") {
             steps {
                 echo 'App name: '+"${VERACODE_APP_NAME}"
                 echo 'Scan name: Verademo_'+"${TIME_STAMP}"
