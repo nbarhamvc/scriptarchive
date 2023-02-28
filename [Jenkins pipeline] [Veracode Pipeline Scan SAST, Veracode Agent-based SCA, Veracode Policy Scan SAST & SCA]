@@ -21,7 +21,7 @@ pipeline {
                 echo 'Application name = "${VERACODE_APP_NAME}"'
                 echo 'Scan name = Verademo_"${TIME_STAMP}"'
                 // Get some code from a GitHub repository
-                git branch: 'main', url: 'https://gitlab.com/vcnbarham/verademo-gitlab.git'
+                git branch: 'main', url: '<INSERTREPO>'
                 // Maven build
                 dir (".") {
                     sh "mvn clean package"
