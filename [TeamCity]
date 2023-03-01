@@ -1,0 +1,66 @@
+package _Self.buildTypes
+
+import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.buildFeatures.perfmon
+import jetbrains.buildServer.configs.kotlin.buildSteps.maven
+import jetbrains.buildServer.configs.kotlin.buildSteps.powerShell
+import jetbrains.buildServer.configs.kotlin.triggers.vcs
+
+object Build : BuildType({
+    name = "Build"
+
+    artifactRules = "**/* => target_directory"
+
+    vcs {
+        root(HttpsGitlabComVcnbarhamVerademoGitlabGitRefsHeadsMain)
+    }
+
+    steps {
+        maven {
+            goals = "compile"
+            runnerArgs = "-Dmaven.test.failure.ignore=true"
+        }
+        powerShell {
+            name = "Veracode Pipeline Scan"
+            enabled = false
+            scriptMode = script {
+                content = """
+                    invoke-Command {
+                    Write-Output 'Download PipelineScanner'
+                    (New-Object System.Net.WebClient).DownloadFile('https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip', '.\pipeline-scanner-java-LATEST.zip')
+                    Write-Output 'Unzip PipelineScanner'
+                    Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
+                    Write-Output 'Run Pipeline Scanner'
+                    java -jar c:\pipeline-scan.jar -vid 9cdbaa8daa87a1c2d1abd5e267c26644 -vkey 31632ecb34a89f548ae2dfda9154a5c5128a1ebb7ec087492ca41fc9cdaaa88684b4fc780c638a6f70eacc60a74684a994bb7a930e5d9e6aab2db9f2b3f1ba52 -f "C:\Program Files\Jenkins\.jenkins\workspace\PipelineScan\app\target\verademo.war"
+                    }
+                """.trimIndent()
+            }
+        }
+        step {
+            type = "teamcity-veracode-plugin"
+            param("deleteIncompleteScan", "0")
+            param("appName", "verademo-github")
+            param("criticality", "VeryHigh")
+            param("useGlobalCredentials", "false")
+            param("version", "${'$'}timestamp")
+            param("vid", "9cdbaa8daa87a1c2d1abd5e267c26644")
+            param("uploadIncludePattern", "**/**.war")
+            param("createProfile", "false")
+            param("waitForScan", "true")
+            param("createSandbox", "false")
+            param("scanTimeOut", "30")
+            param("vkey", "31632ecb34a89f548ae2dfda9154a5c5128a1ebb7ec087492ca41fc9cdaaa88684b4fc780c638a6f70eacc60a74684a994bb7a930e5d9e6aab2db9f2b3f1ba52")
+        }
+    }
+
+    triggers {
+        vcs {
+            enabled = false
+        }
+    }
+
+    features {
+        perfmon {
+        }
+    }
+})
