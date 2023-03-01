@@ -1,0 +1,98 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: Maven@3
+  displayName: Application Build (Maven)
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+- task: Bash@3
+  displayName: Veracode SAST Pipeline Scan
+  inputs:
+    targetType: 'inline'
+    script: |
+      curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+      unzip -o pipeline-scan-LATEST.zip
+      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f /home/vsts/work/1/s/target/verademo.war || true 
+- publish: $(System.DefaultWorkingDirectory)/results.json
+
+## CUSTOM RESULTS ##
+- task: CmdLine@2
+  name: SaveResultsAsHtmlAndXml
+  inputs:
+    script: |
+      echo Saving results as xml and html
+      curl -sSO https://raw.githubusercontent.com/cadonuno/pipeline2detailedreport/master/detailedreport.py 
+      python detailedreport.py --html
+      python detailedreport.py --html --html_name "pipeline-report-filtered.html" --xml_name "detailed_report_filtered.xml" -f filtered_results.json
+      echo Finished saving results
+  condition:
+      succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  condition:
+      succeededOrFailed()
+  inputs:
+    pathToPublish: 'pipeline-report.html'
+    artifactName: pipeline-result
+
+- task: PublishBuildArtifacts@1
+  condition:
+    succeededOrFailed()
+  inputs:
+    pathToPublish: 'pipeline-report-filtered.html'
+    artifactName: pipeline-result
+- task: PublishBuildArtifacts@1
+  condition:
+    succeededOrFailed()
+  inputs:
+    pathToPublish: 'detailed_report.xml'
+    artifactName: pipeline-result
+- task: PublishBuildArtifacts@1
+  condition:
+    succeededOrFailed()
+  inputs:
+    pathToPublish: 'detailed_report_filtered.xml'
+    artifactName: pipeline-result
+
+#########
+
+- task: CmdLine@2
+  displayName: 'Veracode SCA Agent-based scan'
+  env:
+    SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+  inputs:
+    script: 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
+
+- task: Veracode@3
+  inputs:
+    ConnectionDetailsSelection: 'Endpoint'
+    AnalysisService: 'Veracode'
+    veracodeAppProfile: 'verademo-azure'
+    version: '$(build.buildNumber)'
+    filepath: '/home/vsts/work/1/s/target/verademo.war'
+    failBuildIfUploadAndScanBuildStepFails: true
+    importResults: true
+    failBuildOnPolicyFail: true
+    maximumWaitTime: '30'
+    
+- task: Veracode Flaw Importer@3
+  inputs:
+    ConnectionDetailsSelection: 'Endpoint'
+    AnalysisService: 'Veracode'
+    veracodeAppProfile: 'verademo-azure'
+    importType: 'All Unmitigated Flaws Violating Policy'
+    workItemType: 'Task'
+    area: '$(system.teamProject)'
+    flawImportLimit: '1000'
+  condition: failed()
