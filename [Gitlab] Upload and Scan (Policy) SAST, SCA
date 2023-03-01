@@ -1,0 +1,49 @@
+stages:
+    - App-build
+    - Policy-scan
+    - Crashtest-scan
+
+Compile Application:
+    image: maven:3.6.0-jdk-8
+    stage: App-build
+    script:
+      - mvn clean package
+    artifacts:
+      name: verademo-gitlab
+      paths:
+        - target/
+      expire_in: 5 week
+    cache:
+      paths:
+        - target/
+        - .m2/repository
+
+Policy Scan Static Analysis:
+    image: veracode/api-wrapper-java
+    stage: Policy-scan
+    script:
+        - java -jar /opt/veracode/api-wrapper.jar 
+            -vid ${VERACODE_API_ID} 
+            -vkey ${VERACODE_API_KEY}
+            -action UploadAndScan 
+            -appname "verademo-gitlab" 
+            -createprofile true 
+            -autoscan true
+          -filepath ./target/verademo.war 
+          -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+          -scantimeout 15 2>&1 | tee policy_scan_output.txt
+    artifacts:
+        paths:
+            - policy_scan_output.txt
+        when: always
+        name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    allow_failure: true
+
+Crashtest Security Scan:
+  image: alpine:latest
+  stage: Crashtest-scan
+  script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
+  artifacts:
+   when: always
+   reports:
+    junit: test-reports/report.xml
