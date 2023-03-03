@@ -1,4 +1,5 @@
 # Needs $VERACODE_API_ID and $VERACODE_API_KEY params/env variables setting 
+# Use %syntax for env. variables dependent on CI tool & consider build target dir
 
 curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
 unzip -u pipeline-scan-LATEST.zip pipeline-scan.jar
