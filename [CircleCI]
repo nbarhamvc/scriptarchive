@@ -1,0 +1,76 @@
+# Needs env variables setting for VERACODE_API_ID, VERACODE_API_KEY and SRCCLR_API_TOKEN
+
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: cimg/openjdk:11.0
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: mvn -B -DskipTests clean package
+
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - target
+            - ./
+
+  Veracode-AgentbasedSCA:
+    docker:
+      - image: cimg/openjdk:11.0
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Veracode Agent-based SCA"
+          command: |
+            curl -sSL https://download.sourceclear.com/ci.sh | bash
+
+  Veracode-PipelineScanSAST:
+    docker:
+      - image: veracode/pipeline-scan:latest
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Veracode Pipeline Scan SAST"
+          command: java -jar /opt/veracode/pipeline-scan.jar 
+            -vid $VERACODE_API_ID
+            -vkey $VERACODE_API_KEY
+            -f <FILEFORSCANNING>
+
+  Veracode-UploadandScanSASTSCA:
+    docker:
+      - image: veracode/api-wrapper-java:latest
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Upload and Scan SCA, SAST (Policy)"
+          command: java -jar /opt/veracode/api-wrapper.jar 
+            -vid $VERACODE_API_ID
+            -vkey $VERACODE_API_KEY
+            -action UploadAndScan 
+            -appname "verademo-circleci" 
+            -createprofile true 
+            -autoscan true
+            -filepath <FILEFORSCANNING>
+            -version CircleCI-$CIRCLE_BUILD_NUM
+            -scantimeout 30
+
+workflows:
+  Veracodescanning: 
+    jobs:
+      - build
+      - Veracode-AgentbasedSCA:
+          requires:
+          - build
+      - Veracode-PipelineScanSAST:
+          requires:
+          - build
+      - Veracode-UploadandScanSASTSCA:
+          requires:
+          - build
+      
