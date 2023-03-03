@@ -40,7 +40,7 @@ object Build : BuildType({
             name = "Upload and Scan SAST, SCA (Policy) with Veracode"
             type = "teamcity-veracode-plugin"
             param("deleteIncompleteScan", "0")
-            param("appName", "verademo-github")
+            param("appName", "APPNAMEASONVERACODEPLATFORM")
             param("criticality", "VeryHigh")
             param("useGlobalCredentials", "true")
             param("version", "%build.number%")
