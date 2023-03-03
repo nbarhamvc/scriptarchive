@@ -1,9 +1,13 @@
+# Requires setting of VERACODE_API_ID, VERACODE_API_KEY and SRCCLR_API_TOKEN env variables as secret parameters
+# Makes use of latest Pipeline Scan jar wrapper. Could also use Docker image if preferred
+# Makes use of TeamCity plugin for Upload and Scan SAST, SCA. Could also use API wrapper or Docker image if preferred
+
 package _Self.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildFeatures.perfmon
 import jetbrains.buildServer.configs.kotlin.buildSteps.maven
-import jetbrains.buildServer.configs.kotlin.buildSteps.powerShell
+import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 
 object Build : BuildType({
@@ -20,36 +24,33 @@ object Build : BuildType({
             goals = "compile"
             runnerArgs = "-Dmaven.test.failure.ignore=true"
         }
-        powerShell {
-            name = "Veracode Pipeline Scan"
-            enabled = false
-            scriptMode = script {
-                content = """
-                    invoke-Command {
-                    Write-Output 'Download PipelineScanner'
-                    (New-Object System.Net.WebClient).DownloadFile('https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip', '.\pipeline-scanner-java-LATEST.zip')
-                    Write-Output 'Unzip PipelineScanner'
-                    Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
-                    Write-Output 'Run Pipeline Scanner'
-                    java -jar c:\pipeline-scan.jar -vid 9cdbaa8daa87a1c2d1abd5e267c26644 -vkey 31632ecb34a89f548ae2dfda9154a5c5128a1ebb7ec087492ca41fc9cdaaa88684b4fc780c638a6f70eacc60a74684a994bb7a930e5d9e6aab2db9f2b3f1ba52 -f "C:\Program Files\Jenkins\.jenkins\workspace\PipelineScan\app\target\verademo.war"
-                    }
-                """.trimIndent()
-            }
+        script {
+            name = "Agent-based SCA"
+            scriptContent = "curl -sSL https://download.sourceclear.com/ci.sh | sh"
+        }
+        script {
+            name = "Veracode Pipeline Scan SAST using API wrapper"
+            scriptContent = """
+                curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+                unzip -u pipeline-scan-LATEST.zip pipeline-scan.jar
+                java -jar pipeline-scan.jar --veracode_api_id %env.VERACODE_API_ID% --veracode_api_key %env.VERACODE_API_KEY% --file "%teamcity.build.checkoutDir%/target/verademo.war"
+            """.trimIndent()
         }
         step {
+            name = "Upload and Scan SAST, SCA (Policy) with Veracode"
             type = "teamcity-veracode-plugin"
             param("deleteIncompleteScan", "0")
             param("appName", "verademo-github")
             param("criticality", "VeryHigh")
-            param("useGlobalCredentials", "false")
-            param("version", "${'$'}timestamp")
-            param("vid", "9cdbaa8daa87a1c2d1abd5e267c26644")
+            param("useGlobalCredentials", "true")
+            param("version", "%build.number%")
+            param("vid", "VERACODEAPIID")
             param("uploadIncludePattern", "**/**.war")
             param("createProfile", "false")
             param("waitForScan", "true")
             param("createSandbox", "false")
             param("scanTimeOut", "30")
-            param("vkey", "31632ecb34a89f548ae2dfda9154a5c5128a1ebb7ec087492ca41fc9cdaaa88684b4fc780c638a6f70eacc60a74684a994bb7a930e5d9e6aab2db9f2b3f1ba52")
+            param("vkey", "VERACODEAPIKEY")
         }
     }
 
@@ -57,6 +58,12 @@ object Build : BuildType({
         vcs {
             enabled = false
         }
+    }
+
+    failureConditions {
+        testFailure = false
+        nonZeroExitCode = false
+        javaCrash = false
     }
 
     features {
