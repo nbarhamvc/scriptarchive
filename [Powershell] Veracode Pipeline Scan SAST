@@ -1,0 +1,11 @@
+# Set VERACODE API ID & KEY env variables
+# See Veracode documentation for additional parameters
+
+invoke-Command {
+Write-Output 'Download PipelineScanner'
+(New-Object System.Net.WebClient).DownloadFile('https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip', '.\pipeline-scanner-java-LATEST.zip')
+Write-Output 'Unzip PipelineScanner'
+Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
+Write-Output 'Run Pipeline Scanner'
+java -jar c:\pipeline-scan.jar -vid <VERACODEAPIID> -vkey <VERACODEAPIKEY> -f target/outputfile.war
+}
