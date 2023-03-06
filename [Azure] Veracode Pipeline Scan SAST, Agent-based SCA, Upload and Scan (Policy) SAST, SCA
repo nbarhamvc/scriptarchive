@@ -86,7 +86,7 @@ steps:
 
 # Agent-based SCA scan submission, scans repo directly, does not require built artifact. 
 # Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
-# Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete it.
+# Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete itself.
 
 - task: CmdLine@2
   displayName: 'Veracode SCA Agent-based scan'
