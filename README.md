@@ -26,6 +26,8 @@ This is a collection of scripts and pipeline configuration files serving as exam
 
 # Methods of submitting scans
 
+There are a number of methods which can be used to submit scans, dependent on environment and preference. Although the methods are different, the result is the same. 
+
 - Plugins, Actions, Tasks - dependent on CI tool, these abstract the wrappers from the user to make configuration easier. Search the relevant marketplace to see Veracode official artifacts.
 
 - API wrappers - Our Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers).
