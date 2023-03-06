@@ -1,8 +1,10 @@
 # Introduction
 
-This is a collection of scripts and pipeline configuration files for use in different CI tools, for conducting automated Veracode security scanning. Veracode makes use of API credentials and secure tokens to authenticate and submit scans.
+This is a collection of scripts and pipeline configuration files serving as example for submitting automated Veracode scans in different CI tools. 
 
-# General information - 
+# Good to know 
+
+- Veracode makes use of API credentials and secure tokens to authenticate with the platform and submit scans. There are two types of user - Human and API service accounts. API Service Account IDs and Keys should be used in pipelines. [Further info is available here](https://docs.veracode.com/r/c_about_veracode_accounts).
 
 - Our [Document Center landing page](https://docs.veracode.com/) – authoritative resource for viewing step-by-step instructions & coverage for scan type
 
