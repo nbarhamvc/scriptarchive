@@ -5,6 +5,10 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+
+# Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
+# If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
+
 - task: Maven@3
   displayName: Application Build (Maven)
   inputs:
@@ -16,6 +20,9 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+
+# Pipeline Scan SAST option 1 - conducted using Bash script & Java wrapper directly using API ID/KEY.
+
 - task: Bash@3
   displayName: Veracode SAST Pipeline Scan
   inputs:
@@ -26,7 +33,15 @@ steps:
       java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f /home/vsts/work/1/s/target/verademo.war || true 
 - publish: $(System.DefaultWorkingDirectory)/results.json
 
-## CUSTOM RESULTS ##
+# Pipeline Scan SAST option 2 - conducted with task from marketplace using API ID/KEY.
+# - task: VeracodePipelineScan@0
+#   inputs:
+#     VeracodeAPIID: '$(VERACODE_API_ID)'
+#     VeracodeAPIsecret: '$(VERACODE_API_KEY)'
+#     fileToScan: '$(System.DefaultWorkingDirectory)/target/verademo.war'
+
+# Tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing as artifacts.
+
 - task: CmdLine@2
   name: SaveResultsAsHtmlAndXml
   inputs:
@@ -52,12 +67,14 @@ steps:
   inputs:
     pathToPublish: 'pipeline-report-filtered.html'
     artifactName: pipeline-result
+
 - task: PublishBuildArtifacts@1
   condition:
     succeededOrFailed()
   inputs:
     pathToPublish: 'detailed_report.xml'
     artifactName: pipeline-result
+
 - task: PublishBuildArtifacts@1
   condition:
     succeededOrFailed()
@@ -65,7 +82,8 @@ steps:
     pathToPublish: 'detailed_report_filtered.xml'
     artifactName: pipeline-result
 
-#########
+# Agent-based SCA scan submission. Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
+# Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete it.
 
 - task: CmdLine@2
   displayName: 'Veracode SCA Agent-based scan'
@@ -74,18 +92,23 @@ steps:
   inputs:
     script: 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
 
+# Upload and Scan SAST, SCA (Policy or Sandbox Scan) using the marketplace task. A number of parameters can be passed, see docs.veracode.com for relevant article.
+# Veracode recommends setting up a service connection to securely pass secrets.
+
 - task: Veracode@3
   inputs:
     ConnectionDetailsSelection: 'Endpoint'
     AnalysisService: 'Veracode'
     veracodeAppProfile: 'verademo-azure'
     version: '$(build.buildNumber)'
-    filepath: '/home/vsts/work/1/s/target/verademo.war'
+    filepath: '$(System.DefaultWorkingDirectory)/target/verademo.war'
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
     failBuildOnPolicyFail: true
     maximumWaitTime: '30'
     
+# Configurable via the upload and scan task. Can import results into Azure boards as work items.
+
 - task: Veracode Flaw Importer@3
   inputs:
     ConnectionDetailsSelection: 'Endpoint'
