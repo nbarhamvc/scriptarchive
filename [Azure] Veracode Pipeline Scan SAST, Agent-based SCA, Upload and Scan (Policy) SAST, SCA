@@ -40,7 +40,7 @@ steps:
 #     VeracodeAPIsecret: '$(VERACODE_API_KEY)'
 #     fileToScan: '$(System.DefaultWorkingDirectory)/target/verademo.war'
 
-# Tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing as artifacts.
+# Optional tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing as artifacts.
 
 - task: CmdLine@2
   name: SaveResultsAsHtmlAndXml
