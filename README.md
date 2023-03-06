@@ -26,7 +26,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 # Methods of scan submission
 
-There are a number of methods which can be used to submit scans, dependent on environment and preference. Although the methods are different, the result is the same. 
+There are a number of methods which can be used to submit scans, dependent on environment and preference. Whichever delivery method is chosen, the result will be the same. 
 
 - API wrappers - Our Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers). Please be aware that some of the files/scripts in this repo will only work on either Linux or Windows environments.
 
