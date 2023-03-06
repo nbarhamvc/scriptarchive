@@ -4,13 +4,13 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 # Good to know 
 
-- Our [Document Center landing page](https://docs.veracode.com/) – is the authoritative resource for viewing step-by-step instructions & coverage for scan type.
+- Veracode's [Document Center landing page](https://docs.veracode.com/) is the authoritative resource for viewing step-by-step instructions & coverage for scan type.
 
 - Veracode makes use of API credentials and secure tokens to authenticate with the platform and submit scans. There are two types of user - Human and API service accounts. API Service Account IDs and Keys should be used in pipelines. [Further info is available here](https://docs.veracode.com/r/c_about_veracode_accounts).
 
-- Our [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build step/config prior to prior to uploading the compiled or packaged artifact(s) to Veracode for scanning. There is an abridged packaging cheat sheet [available here](https://nhinv11.github.io/#/).
+- Veracode's [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build step/config  prior to uploading the compiled or packaged artifact(s) to Veracode for scanning. There is an abridged packaging cheat sheet [available here](https://nhinv11.github.io/#/).
 
-- [Supported languages and platforms](https://docs.veracode.com/r/r_supported_table) – showing our full language coverage for SAST Sandbox/Policy Scans. Please note, at present the Pipeline Scan language coverage is reduced, [see current list here](https://docs.veracode.com/r/About_Pipeline_Scan_Prerequisites).
+- [Supported languages and platforms](https://docs.veracode.com/r/r_supported_table) – showing full language coverage for SAST Sandbox/Policy Scans. Please note, at present the Pipeline Scan language coverage is reduced, [see current list here](https://docs.veracode.com/r/About_Pipeline_Scan_Prerequisites).
 
 - Static Analysis (SAST) identifies potentially exploitable flaws in code you have written. SAST scans can be conducted using a variety of methods - see 'Methods of submitting scans' below for more info. 
 
@@ -18,7 +18,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 # Scan types in these files
 
-- [Veracode Pipeline Scan SAST](https://docs.veracode.com/r/Pipeline_Scan) - Our fastest SAST scan type in CI, suited for use in pipelines/branches with frequent commits. Will show results in CI build log and generate a results.json file, but results are not visible or linked to application profiles on Veracode platform. Use case is developers fixing findings earlier in their SSDLC. Parameters can be passed to configure output, check against Policy or baseline file.
+- [Veracode Pipeline Scan SAST](https://docs.veracode.com/r/Pipeline_Scan) - Veracode's fastest SAST scan type in CI, suited for use in pipelines/branches with frequent commits. Will show results in CI build log and generate a results.json file, but results are not visible or linked to application profiles on Veracode platform. Use case is developers fixing findings earlier in their SSDLC. Parameters can be passed to configure output, check against Policy or baseline file.
 
 - [Upload and Scan SAST, SCA](https://docs.veracode.com/r/Getting_Started_with_Static_Analysis) - Fully-featured SAST scan type, including basic SCA results and full visibility via Veracode web interface in application profiles. Suited to positioning where there are less frequent commits, as only one scan can be conducted at once and scans cannot be queued. Option to scan at the Policy level which shows compliance, or in a development Sandbox to check compliance without impacting pass/fail state.
 
@@ -28,11 +28,11 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 There are a number of methods which can be used to submit scans, dependent on environment and preference. Whichever delivery method is chosen, the result will be the same. 
 
-- API wrappers - Our Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers). Please be aware that some of the files/scripts in this repo will only work on either Linux or Windows environments.
+- API wrappers - Veracode's Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers). Please be aware that some of the files/scripts in this repo will only work on either Linux or Windows environments.
 
 - Plugins, Actions, Tasks - dependent on CI tool, these abstract the wrappers from the user to make configuration easier. Search the relevant marketplace to see Veracode official artifacts.
 
-- Docker images - containing our wrappers for use in CI pipelines. [See this link to the images](https://hub.docker.com/u/veracode).
+- Certified Docker images - containing wrappers for use in CI pipelines. [See this link to the images](https://hub.docker.com/u/veracode).
 
 - Manual upload - You can use the web interface to manually conduct all scan types, with the exception of Agent-based SCA - useful as a fall-back in case pipelines stop working.
 
