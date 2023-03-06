@@ -18,12 +18,11 @@ This is a collection of scripts and pipeline configuration files serving as exam
 
 - Veracode Pipeline Scan SAST - Our fastest SAST scan type in CI, suited for use in pipelines/branches with frequent commits. Will show results in CI build log and generate a results.json file, but results are not visible in application profiles on platform. Use case is developers fixing findings earlier in their SSDLC.
 
-- Veracode Upload and Scan SAST, SCA - Fully-feature SAST scan type, also includes basic SCA results with full visibility of results on Veracode web interface in application profiles. Suited for less frequent commits, only scan can be conducted at once at either the Policy or Sandbox level.
+- Veracode Upload and Scan SAST, SCA - Fully-feature SAST scan type, also includes basic SCA results with full visibility of results on Veracode web interface in application profiles. Suited for less frequent commits, as only one scan can be conducted at once in the Policy or in a Sandbox. Scans cannot be queued. 
 
-- Veracode Agent-based SCA - 
+- Veracode Agent-based SCA - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interace.
 
 # Methods of scanning
-
 
 Manual - Use web interface to submit Upload and Scan SAST, SCA and DAST scans.
 API wrapper - 
