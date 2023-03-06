@@ -98,7 +98,7 @@ steps:
 # Upload and Scan SAST, SCA (Policy or Sandbox Scan) using the marketplace task. A number of parameters can be passed, see docs.veracode.com for relevant article.
 # Takes artifact built earlier and uploads to Veracode platform for scanning.
 # If no sandbox parameter  is specified, Policy Scan will take place.
-# Avoid exposing credentials in pipeline - endpoint connection is used here, but secure secrets vault/similar should be OK.
+# Avoid exposing credentials in pipeline - endpoint connection is used here.
 
 - task: Veracode@3
   inputs:
