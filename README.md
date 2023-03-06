@@ -1,6 +1,6 @@
 # Introduction
 
-This is a collection of scripts and pipeline configuration files serving as example for submitting automated Veracode scans in different CI tools. 
+This is an unofficial collection of scripts and pipeline configuration files, serving as examples for submitting automated Veracode scans in different CI tools. 
 
 # Good to know 
 
