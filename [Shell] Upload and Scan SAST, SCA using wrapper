@@ -1,0 +1,7 @@
+# Requires setting VERACODE_API_ID and VERACODE_API_KEY as env variables/secrets
+# Consider using latest version of wraapper at https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/
+# Use $/% in declaring env variables dependent on CI tool
+# Refer to Veracode documentation for parameters which can be passed to wrapper, to change scan behaviour
+
+curl -O https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.1.10.5/vosp-api-wrappers-java-23.1.10.5.jar
+java -jar vosp-api-wrappers-java-23.1.10.5.jar -vid $VERACODE_API_ID -vkey $VERACODE_API_KEY -action UploadandScan -appname <INSERTAPPNAMEASONVERACODEPLATFORM> -createprofile false -version $BUILD_ID -filepath ./target/verademo.war
