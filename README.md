@@ -30,7 +30,7 @@ There are a number of methods which can be used to submit scans, dependent on en
 
 - Plugins, Actions, Tasks - dependent on CI tool, these abstract the wrappers from the user to make configuration easier. Search the relevant marketplace to see Veracode official artifacts.
 
-- API wrappers - Our Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers).
+- API wrappers - Our Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers). Please be aware that some of the files/scripts in this repo will only work on either Linux or Windows environments.
 
 - Docker images - containing our wrappers for use in CI pipelines. [See this link to the images](https://hub.docker.com/u/veracode).
 
