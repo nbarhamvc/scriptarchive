@@ -35,6 +35,7 @@ steps:
 - publish: $(System.DefaultWorkingDirectory)/results.json
 
 # Pipeline Scan SAST option 2 - conducted with task from marketplace using API ID/KEY.
+
 # - task: VeracodePipelineScan@0
 #   inputs:
 #     VeracodeAPIID: '$(VERACODE_API_ID)'
