@@ -22,13 +22,12 @@ This is a collection of scripts and pipeline configuration files serving as exam
 
 - [Veracode Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interace.
 
-# Methods of scanning
+# Methods of submitting scans
 
-- Manual - Use the web interface to submit Upload and Scan SAST, SCA and Dynamic Analysis (DAST) scans.
+- Manual - You can use the web interface to manually conduct all scan types, with the exception of Agent-based SCA.
 
-API wrapper - 
-Actions, Tasks, Plugins - available on respective marketplaces for each of the CI tools. These 
+- API wrappers - Our Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers).
 
+- Docker images - containing our wrappers for use in CI pipelines. [See this link to the images](https://hub.docker.com/u/veracode).
 
-
-
+- Plugins, Actions, Tasks - dependent on CI tool, these abstract the wrappers from the user to make configuration easier. Search the relevant marketplace to see Veracode official artifacts.
