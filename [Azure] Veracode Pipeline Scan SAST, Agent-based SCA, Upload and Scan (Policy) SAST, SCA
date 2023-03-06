@@ -21,7 +21,8 @@ steps:
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
 
-# Pipeline Scan SAST option 1 - conducted using Bash script & Java wrapper directly using API ID/KEY.
+# Pipeline Scan SAST option 1 - conducted using Bash script & Java wrapper directly using API ID/KEY. 
+# Takes artifact from build step and uploads to Veracode servers for scanning.
 
 - task: Bash@3
   displayName: Veracode SAST Pipeline Scan
@@ -82,7 +83,8 @@ steps:
     pathToPublish: 'detailed_report_filtered.xml'
     artifactName: pipeline-result
 
-# Agent-based SCA scan submission. Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
+# Agent-based SCA scan submission, scans repo directly, does not require built artifact. 
+# Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
 # Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete it.
 
 - task: CmdLine@2
@@ -93,7 +95,9 @@ steps:
     script: 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
 
 # Upload and Scan SAST, SCA (Policy or Sandbox Scan) using the marketplace task. A number of parameters can be passed, see docs.veracode.com for relevant article.
-# Veracode recommends setting up a service connection to securely pass secrets.
+# Takes artifact built earlier and uploads to Veracode platform for scanning.
+# If no sandbox parameter  is specified, Policy Scan will take place.
+# Veracode recommends setting up a service connection to securely pass secrets/using vault rather than exposing in pipeline.
 
 - task: Veracode@3
   inputs:
