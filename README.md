@@ -16,7 +16,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - Software Composition Analysis (SCA) identifies known vulnerabilities for your open-source dependencies. Basic results are generated automatically when packaging and scanning your app for Upload and Scan SAST, with more in-depth results visible using Agent-based SCA (see below).
 
-# Scan types included in these files
+# Scan types in these files
 
 - [Veracode Pipeline Scan SAST](https://docs.veracode.com/r/Pipeline_Scan) - Our fastest SAST scan type in CI, suited for use in pipelines/branches with frequent commits. Will show results in CI build log and generate a results.json file, but results are not visible or linked to application profiles on Veracode platform. Use case is developers fixing findings earlier in their SSDLC. Parameters can be passed to configure output, check against Policy or baseline file.
 
@@ -24,7 +24,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - [Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interace.
 
-# Methods of submitting scans
+# Methods of scan submission
 
 There are a number of methods which can be used to submit scans, dependent on environment and preference. Although the methods are different, the result is the same. 
 
