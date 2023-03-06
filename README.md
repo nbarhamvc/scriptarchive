@@ -6,7 +6,7 @@ This is a collection of scripts and pipeline configuration files for use in diff
 
 - Our [Document Center landing page](https://docs.veracode.com/) – authoritative resource for viewing step-by-step instructions & coverage for scan type
 
-- Our [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build config for all SAST types, prior to uploading the artifact(s) to the Veracode platform. There is an abridged cheat sheet [available here](https://nhinv11.github.io/#/).
+- Our [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build step/config prior to prior to uploading the compiled or packaged artifact(s) to Veracode for scanning. There is an abridged packaging cheat sheet [available here](https://nhinv11.github.io/#/).
 
 - [Supported languages and platforms](https://docs.veracode.com/r/r_supported_table) – showing our full language coverage for SAST Sandbox/Policy Scans. Please note, at present the Pipeline Scan language coverage is reduced - [available here](https://docs.veracode.com/r/About_Pipeline_Scan_Prerequisites).
 
