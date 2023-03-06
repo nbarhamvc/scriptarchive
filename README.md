@@ -1,4 +1,4 @@
-# Introduction
+# Intro
 
 This is an unofficial collection of scripts and pipeline configuration files that I use, serving as examples for submitting automated Veracode scans in different CI tools. 
 
