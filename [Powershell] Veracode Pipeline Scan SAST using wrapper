@@ -1,5 +1,6 @@
-# Set VERACODE API ID & KEY env variables
-# See Veracode documentation for additional parameters
+# PowerShell script for use on Windows runner/agent. Downloads latest wrapper, extracts, passes credentials and file to scan.
+# Set VERACODE API ID & KEY env variables in CI tool.
+# See Veracode documentation for additional parameters.
 
 invoke-Command {
 Write-Output 'Download PipelineScanner'
