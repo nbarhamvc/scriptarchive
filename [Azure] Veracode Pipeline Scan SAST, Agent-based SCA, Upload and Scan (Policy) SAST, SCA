@@ -112,7 +112,7 @@ steps:
     failBuildOnPolicyFail: true
     maximumWaitTime: '30'
     
-# Uses dedicataed Veracode task. Can import results into Azure boards as work items.
+# Configurable task, to import results into Azure boards as work items.
 
 - task: Veracode Flaw Importer@3
   inputs:
