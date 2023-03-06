@@ -35,3 +35,8 @@ There are a number of methods which can be used to submit scans, dependent on en
 - Docker images - containing our wrappers for use in CI pipelines. [See this link to the images](https://hub.docker.com/u/veracode).
 
 - Manual - You can use the web interface to manually conduct all scan types, with the exception of Agent-based SCA.
+
+# Example of how scan types could be integrated
+
+The below figure shows an example of [i]potential[/i] use of scan types as part of branch structure. Entirely flexible based on your DevOps pattern/commit frequency:
+
