@@ -18,9 +18,9 @@ This is a collection of scripts and pipeline configuration files serving as exam
 
 - [Veracode Pipeline Scan SAST](https://docs.veracode.com/r/Pipeline_Scan) - Our fastest SAST scan type in CI, suited for use in pipelines/branches with frequent commits. Will show results in CI build log and generate a results.json file, but results are not visible in application profiles on platform. Use case is developers fixing findings earlier in their SSDLC.
 
-- [Veracode Upload and Scan SAST, SCA](https://docs.veracode.com/r/Getting_Started_with_Static_Analysis) - Fully-feature SAST scan type, also includes basic SCA results with full visibility of results on Veracode web interface in application profiles. Suited for less frequent commits, as only one scan can be conducted at once in the Policy or in a Sandbox. Scans cannot be queued. 
+- [Upload and Scan SAST, SCA](https://docs.veracode.com/r/Getting_Started_with_Static_Analysis) - Fully-feature SAST scan type, also includes basic SCA results with full visibility of results on Veracode web interface in application profiles. Suited for less frequent commits, as only one scan can be conducted at once in the Policy or in a Sandbox. Scans cannot be queued. 
 
-- [Veracode Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interace.
+- [Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interace.
 
 # Methods of submitting scans
 
