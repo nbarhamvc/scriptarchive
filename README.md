@@ -40,4 +40,4 @@ There are a number of methods which can be used to submit scans, dependent on en
 
 The below figure shows an example of *_potential_* use of scan types as part of branch structure. Entirely flexible based on your DevOps pattern/commit frequency:
 
-![Veracode integrations in branch structure](https://github.com/nbarhamvc/scriptarchive/Exampleint.PNG?raw=true)
+![Veracode integrations in branch structure](https://github.com/nbarhamvc/scriptarchive/blob/main/Exampleint.PNG?raw=true)
