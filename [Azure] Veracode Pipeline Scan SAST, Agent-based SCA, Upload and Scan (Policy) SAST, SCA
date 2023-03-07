@@ -8,6 +8,7 @@ steps:
 
 # Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
 # If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
+# Please note, the Applciation Security Consultant will not be able to assist with pipeline config. Contact your Veracode CSE for assistance with this.
 
 - task: Maven@3
   displayName: Application Build (Maven)
@@ -31,7 +32,7 @@ steps:
     script: |
       curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
       unzip -o pipeline-scan-LATEST.zip
-      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(System.DefaultWorkingDirectory)/target/verademo.war || true 
+      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(System.DefaultWorkingDirectory)<INSERTFILEFORSCANNING> || true 
 - publish: $(System.DefaultWorkingDirectory)/results.json
 
 # Pipeline Scan SAST option 2 - conducted with task from marketplace using API ID/KEY.
@@ -40,7 +41,7 @@ steps:
 #   inputs:
 #     VeracodeAPIID: '$(VERACODE_API_ID)'
 #     VeracodeAPIsecret: '$(VERACODE_API_KEY)'
-#     fileToScan: '$(System.DefaultWorkingDirectory)/target/verademo.war'
+#     fileToScan: '$(System.DefaultWorkingDirectory)<INSERTFILEFORSCANNING>'
 
 # Optional tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing as artifacts.
 
@@ -106,7 +107,7 @@ steps:
     AnalysisService: 'Veracode'
     veracodeAppProfile: 'verademo-azure'
     version: '$(build.buildNumber)'
-    filepath: '$(System.DefaultWorkingDirectory)/target/verademo.war'
+    filepath: '$(System.DefaultWorkingDirectory)<INSERTFILEFORSCANNING>'
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
     failBuildOnPolicyFail: true
