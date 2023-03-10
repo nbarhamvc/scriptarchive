@@ -1,10 +1,17 @@
 name: Development branch
-# 
+
+# Configured to run on push of development branch. This YML contains all scan types.
+
 on:
   push:
     branches: [development]
 
+# Note: choosing Linux runner, conscious of using any PowerShell scripts
+
 jobs:
+
+# Checking out code from repo, building using maven and uploading .war file to temp directory
+
   App-build:
     runs-on: ubuntu-latest
 
@@ -24,7 +31,11 @@ jobs:
           name: verademo.war
           path: target/verademo.war
 
-  Pipeline-Scan:
+# Veracode Pipeline Scan SAST using docker image, which contains the Pipeline Scan jar file. Uses API ID/KEY environment variables. 
+# Takes artifact from build step and uploads to Veracode servers for scanning (see -f parameter).
+# Note: this scan type could also be conducted outside of a docker image by downloading and calling the wrapper directly.
+
+  Veracode-Pipeline-Scan-SAST-using-docker:
       needs: App-build
       runs-on: ubuntu-latest
       container: 
@@ -55,6 +66,9 @@ jobs:
           with:
             name: filtered-results
             path: filtered_results.json
+
+# Converting for import into GitHub as Issues in SARIF format.
+
         - name: Convert pipeline scan output to SARIF format 
           id: convert
           uses: veracode/veracode-pipeline-scan-results-to-sarif@v0.1.5
@@ -63,8 +77,10 @@ jobs:
             source-base-path-1: "^com/veracode:src/main/java/com/veracode"
             source-base-path-2: "^WEB-INF:src/main/webapp/WEB-INF"       
 
-  import-issues:
-    needs: Pipeline-scan
+# Importing SARIF into GitHub Issues.
+
+  Import-Pipeline-Scan-Results-As-Issues:
+    needs: Veracode-Pipeline-Scan-SAST-using-docker
     runs-on: ubuntu-latest
     steps:
       - name: get scan results
@@ -78,7 +94,9 @@ jobs:
           scan-results-json: 'filtered_results.json'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  Veracode-Pipeline-Scan-action:
+# Alternative option to use GitHub action for Pipeline Scan:
+
+  Veracode-Pipeline-Scan-SAST-using-GH-Action:
     needs: App-build
     runs-on: ubuntu-latest
     steps:
@@ -96,7 +114,11 @@ jobs:
             file: /tmp/verademo.war
             token: ${{ secrets.GITHUB_TOKEN }}
   
-  Agent-based-SCA:
+# Agent-based SCA scan submission using GitHub Action, scans repo directly, does not require built artifact. 
+# Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
+# Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete itself.
+  
+  Agent-based-SCA-using-GH-ACtion:
         runs-on: ubuntu-latest
         name: Agent-based-SCA
 
@@ -111,26 +133,53 @@ jobs:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               create-issues: false
 
-  Veracode-Policy-Scan:
-      runs-on: ubuntu-latest
-      needs: App-build
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+# Upload and Scan SAST, SCA in a development Sandbox, using GitHub Action. A number of parameters can be passed, see docs.veracode.com for relevant article.
+# Takes artifact built earlier and uploads to Veracode platform for scanning.
+# If no sandbox parameter is specified, Policy Scan will take place.
+# Avoid exposing credentials in pipeline, set API ID and KEY as secrets.
+# Note: this scan type could also be conducted in a docker image or by downloading and calling the wrapper directly.
 
-        - name: Download war file
-          uses: actions/download-artifact@v3
-          with: 
-            name: verademo.war
-            path: .
+  Upload-and-Scan-SAST-SCA-Sandbox-using-GH-Action:
+    runs-on: ubuntu-latest
+    needs: App-build
+    steps:
+      - name: Download war file
+        uses: actions/download-artifact@v3
+        with: 
+          name: verademo.war
+          path: .
+    
+      - name: Sandbox Scan
+        uses: veracode/veracode-uploadandscan-action@master
+        with:
+          appname: "verademo-github"
+          createsandbox: false
+          sandboxname: "verademo-github-sandbox"
+          version: '${{ github.run_id }}'
+          filepath: 'verademo.war'
+          vid: '${{ secrets.VERACODE_API_ID }}'
+          vkey: '${{ secrets.VERACODE_API_KEY }}'
+          scantimeout: 15
+  
+  # Upload and Scan SAST, SCA at Policy level, using GitHub Action.
+  
+  Upload-and-Scan-SAST-SCA-Policy-using-GH-Action:
+    runs-on: ubuntu-latest
+    needs: Upload-and-Scan-SAST-SCA-Sandbox-using-GH-Action
+    steps:
+      - name: Download war file
+        uses: actions/download-artifact@v3
+        with: 
+          name: verademo.war
+          path: .
       
-        - name: Policy Scan
-          uses: veracode/veracode-uploadandscan-action@master
-          with:
-            createprofile: true
-            appname: "verademo-github"
-            version: '${{ github.run_id }}'
-            filepath: 'verademo.war'
-            vid: '${{ secrets.VERACODE_API_ID }}'
-            vkey: '${{ secrets.VERACODE_API_KEY }}'
-            scantimeout: 15
+      - name: Policy Scan
+        uses: veracode/veracode-uploadandscan-action@master
+        with:
+          createprofile: false
+          appname: "verademo-github"
+          version: '${{ github.run_id }}'
+          filepath: 'verademo.war'
+          vid: '${{ secrets.VERACODE_API_ID }}'
+          vkey: '${{ secrets.VERACODE_API_KEY }}'
+          scantimeout: 15
