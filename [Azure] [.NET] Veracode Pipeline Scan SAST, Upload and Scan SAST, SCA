@@ -1,0 +1,148 @@
+trigger:
+- main
+
+# Note a Windows image is being used - this precludes use of Agent-based SCA.
+
+pool:
+  vmImage: 'windows-latest'
+
+# Build .NET application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
+# If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Debug'
+
+steps:
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- task: VSBuild@1
+  displayName: Application Build (Visual Studio)
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+# Pipeline Scan SAST option 1 - conducted using cmd line & Java wrapper directly using API ID/KEY.
+- task: CmdLine@2
+  displayName: Veracode Pipeline Scan SAST
+  inputs:
+    script: |
+      curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+      unzip -o pipeline-scan-LATEST.zip
+      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(build.artifactstagingdirectory)\<INSERTFILEFORUPLOAD> || true
+
+- task: PublishBuildArtifacts@1
+  displayName: Create Build Artifact for Veracode Pipeline Scan SAST Results
+  inputs:
+    PathtoPublish: 'results.json'
+    ArtifactName: 'Build'
+    publishLocation: 'Container'
+
+# Pipeline Scan SAST Option 2 - using PowerShell task. Note 'exit 0' to ignore failure
+
+# - task: PowerShell@2
+#   displayName: Veracode Pipeline Scan SAST 
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       invoke-Command {
+#       Write-Output 'Download PipelineScanner'
+#       (New-Object System.Net.WebClient).DownloadFile('https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip', '.\pipeline-scanner-java-LATEST.zip')
+#       Write-Output 'Unzip PipelineScanner'
+#       Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
+#       Write-Output 'Run Pipeline Scanner'
+#       java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(build.artifactstagingdirectory)\<INSERTFILEFORUPLOAD>
+#       }
+#       exit 0
+
+# Pipeline Scan SAST option 3 - conducted with task from marketplace using API ID/KEY.
+
+# - task: VeracodePipelineScan@0
+#   displayName: Veracode Pipeline Scan SAST
+#   inputs:
+#     VeracodeAPIID: '$(VERACODE_API_ID)'
+#     VeracodeAPIsecret: '$(VERACODE_API_KEY)'
+#     fileToScan: '$(build.artifactstagingdirectory)\<INSERTFILEFORUPLOAD>'
+
+# Tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing them as artifacts.
+
+- task: CmdLine@2
+  displayName: Optional save results as HTML And XML
+  inputs:
+    script: |
+      echo Saving results as xml and html
+      curl -sSO https://raw.githubusercontent.com/cadonuno/pipeline2detailedreport/master/detailedreport.py 
+      python detailedreport.py --html
+      python detailedreport.py --html --html_name "pipeline-report-filtered.html" --xml_name "detailed_report_filtered.xml" -f filtered_results.json
+      echo Finished saving results
+  condition:
+      succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 1
+  condition:
+      succeededOrFailed()
+  inputs:
+    pathToPublish: 'pipeline-report.html'
+    artifactName: pipeline-result
+
+- task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 2
+  condition:
+    succeededOrFailed()
+  inputs:
+    pathToPublish: 'pipeline-report-filtered.html'
+    artifactName: pipeline-result
+
+- task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 3
+  condition:
+    succeededOrFailed()
+  inputs:
+    pathToPublish: 'detailed_report.xml'
+    artifactName: pipeline-result
+
+- task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 4
+  condition:
+    succeededOrFailed()
+  inputs:
+    pathToPublish: 'detailed_report_filtered.xml'
+    artifactName: pipeline-result
+
+# Upload and Scan SAST, SCA (Policy or Sandbox Scan) using the marketplace task. A number of parameters can be passed, see docs.veracode.com for relevant article.
+# Veracode recommends setting up a service connection to securely pass secrets.
+
+- task: Veracode@3
+  displayName: Upload and Scan SAST, SCA
+  inputs:
+    ConnectionDetailsSelection: 'Endpoint'
+    AnalysisService: 'Veracode'
+    veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
+    version: '$(build.buildNumber)'
+    filepath: '$(build.artifactstagingdirectory)\<INSERTFILEFORUPLOAD>'
+    failBuildIfUploadAndScanBuildStepFails: true
+    importResults: true
+    failBuildOnPolicyFail: true
+    maximumWaitTime: '30'
+    
+# Configurable via the upload and scan task. Can import results into Azure boards as work items/bugs etc.
+
+- task: Veracode Flaw Importer@3
+  displayName: Import Upload and Scan results as flaws
+  inputs:
+    ConnectionDetailsSelection: 'Endpoint'
+    AnalysisService: 'Veracode'
+    veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
+    importType: 'All Unmitigated Flaws Violating Policy'
+    workItemType: 'Task'
+    area: '$(system.teamProject)'
+    flawImportLimit: '1000'
+  condition: failed()
