@@ -1,6 +1,8 @@
 trigger:
 - main
 
+# Note a Ubuntu image is being used. 
+
 pool:
   vmImage: ubuntu-latest
 
@@ -26,7 +28,7 @@ steps:
 # Takes artifact from build step and uploads to Veracode servers for scanning.
 
 - task: Bash@3
-  displayName: Veracode SAST Pipeline Scan
+  displayName: Veracode Pipeline Scan SAST
   inputs:
     targetType: 'inline'
     script: |
@@ -38,6 +40,7 @@ steps:
 # Pipeline Scan SAST option 2 - conducted with task from marketplace using API ID/KEY.
 
 # - task: VeracodePipelineScan@0
+#   displayName: Veracode Pipeline Scan SAST
 #   inputs:
 #     VeracodeAPIID: '$(VERACODE_API_ID)'
 #     VeracodeAPIsecret: '$(VERACODE_API_KEY)'
@@ -46,7 +49,7 @@ steps:
 # Optional tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing as artifacts.
 
 - task: CmdLine@2
-  name: SaveResultsAsHtmlAndXml
+  displayName: Optional save results as HTML And XML
   inputs:
     script: |
       echo Saving results as xml and html
@@ -58,6 +61,7 @@ steps:
       succeededOrFailed()
 
 - task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 1
   condition:
       succeededOrFailed()
   inputs:
@@ -65,6 +69,7 @@ steps:
     artifactName: pipeline-result
 
 - task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 2
   condition:
     succeededOrFailed()
   inputs:
@@ -72,6 +77,7 @@ steps:
     artifactName: pipeline-result
 
 - task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 3
   condition:
     succeededOrFailed()
   inputs:
@@ -79,6 +85,7 @@ steps:
     artifactName: pipeline-result
 
 - task: PublishBuildArtifacts@1
+  displayName: Optional publish artifact 4
   condition:
     succeededOrFailed()
   inputs:
@@ -90,7 +97,7 @@ steps:
 # Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete itself.
 
 - task: CmdLine@2
-  displayName: 'Veracode SCA Agent-based scan'
+  displayName: 'Agent-based SCA'
   env:
     SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
   inputs:
@@ -102,10 +109,11 @@ steps:
 # Avoid exposing credentials in pipeline - endpoint connection is used here.
 
 - task: Veracode@3
+  displayName: Upload and Scan SAST, SCA
   inputs:
     ConnectionDetailsSelection: 'Endpoint'
     AnalysisService: 'Veracode'
-    veracodeAppProfile: 'verademo-azure'
+    veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
     version: '$(build.buildNumber)'
     filepath: '$(System.DefaultWorkingDirectory)<INSERTFILEFORSCANNING>'
     failBuildIfUploadAndScanBuildStepFails: true
@@ -116,10 +124,11 @@ steps:
 # Configurable task, to import results into Azure boards as work items.
 
 - task: Veracode Flaw Importer@3
+  displayName: Import flaws if scan fails Policy
   inputs:
     ConnectionDetailsSelection: 'Endpoint'
     AnalysisService: 'Veracode'
-    veracodeAppProfile: 'verademo-azure'
+    veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
     importType: 'All Unmitigated Flaws Violating Policy'
     workItemType: 'Task'
     area: '$(system.teamProject)'
