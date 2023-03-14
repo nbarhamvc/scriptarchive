@@ -1,7 +1,7 @@
 trigger:
 - main
 
-# Note a Windows image is being used - this precludes use of Agent-based SCA.
+# Note a Windows image is being used.
 
 pool:
   vmImage: 'windows-latest'
