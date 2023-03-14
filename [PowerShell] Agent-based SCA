@@ -1,0 +1,3 @@
+Set-ExecutionPolicy AllSigned -Scope Process -Force
+$ProgressPreference = "silentlyContinue"; iex ((New-Object System.Net.WebClient).DownloadString('https://download.sourceclear.com/ci.ps1'))
+srcclr scan <LOCATION>
