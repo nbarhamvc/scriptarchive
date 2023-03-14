@@ -117,6 +117,21 @@ steps:
     pathToPublish: 'detailed_report_filtered.xml'
     artifactName: pipeline-result
 
+# Agent-based SCA scan submission. Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
+# Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete it.
+
+- task: PowerShell@2
+  displayName: Agent-based SCA
+  inputs:
+    targetType: 'inline'
+    script: |
+      Set-ExecutionPolicy AllSigned -Scope Process -Force
+      $ProgressPreference = 'SilentlyContinue'
+         iex ((New-Object System.Net.WebClient).DownloadString('https://download.srcclr.com/ci.ps1')); srcclr scan --allow-dirty
+  continueOnError: false
+  env:
+    SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+
 # Upload and Scan SAST, SCA (Policy or Sandbox Scan) using the marketplace task. A number of parameters can be passed, see docs.veracode.com for relevant article.
 # Veracode recommends setting up a service connection to securely pass secrets.
 
