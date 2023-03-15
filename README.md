@@ -24,6 +24,8 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - [Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interace.
 
+- [Veracode Container Security](https://docs.veracode.com/r/Veracode_Container_Security) - Veracode's CLI tool allows for the scanning of archives, repos, images and directories to produce information on SCA vulnerabilities, IaC misconfiguration, exposed secrets, Software Bill of Materials (SBOM) and a policy pass/fail assessment.
+
 # Methods of scan submission
 
 There are a number of methods which can be used to submit scans, dependent on environment and preference. Whichever delivery method is chosen, the result will be the same. 
