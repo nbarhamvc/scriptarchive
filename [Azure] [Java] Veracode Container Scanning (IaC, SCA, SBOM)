@@ -1,0 +1,50 @@
+# Pipeline to download and run Veracode CLI tool to coduct IaC scan of deliberately vuln terraform (Terragoat), deliberately vulnerable app repo (Verademo)
+# Uses Veracode API ID and Key as secrets
+# Publishes 3 artifacts: Software Bill of Materials (SBOM), full scan report (IaC misconfig, Vulns, Secrets, Policy), Vulnerability table (CVEs)
+
+
+trigger:
+- manual
+
+# Note: Linux image required for CLI tool to install.
+
+pool:
+  vmImage: 'ubuntu-latest'
+steps:
+
+# Exporting ID/KEY, downloading tool, configuring credentials, then conducting scan types. Refer to Veracode docs for more info on syntax.
+
+- task: Bash@3
+  displayName: Veracode CLI SCA & SBOM Generation
+  
+  inputs:
+    targetType: inline
+    script: |
+      pwd
+      export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
+      export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
+      curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+      ./veracode configure
+      ./veracode scan --source https://github.com/bridgecrewio/terragoat --type repo --format json --output ./veracode_container_scan.json
+      ./veracode sbom --source https://github.com/veracode/verademo --type repo --format json --output ./sbom.json
+      ./veracode scan --source https://github.com/veracode/verademo --type repo --format table --output ./vulntable.json
+
+# Publish build artifacts for review.
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    artifactName: 'veracode_container_scan.json'
+    pathToPublish: '$(System.DefaultWorkingDirectory)/veracode_container_scan.json'
+  displayName: 'Publish veracode_container_scan.json Artifact'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    artifactName: 'sbom.json'
+    pathToPublish: '$(System.DefaultWorkingDirectory)/sbom.json'
+  displayName: 'Publish Veracode sbom.json Artifact'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    artifactName: 'vulntable.json'
+    pathToPublish: '$(System.DefaultWorkingDirectory)/vulntable.json'
+  displayName: 'Publish Veracode vuln table JSON Artifact'
