@@ -62,7 +62,7 @@ steps:
 #       }
 #       exit 0
 
-# Pipeline Scan SAST option 3 - conducted with task from marketplace using API ID/KEY.
+# Pipeline Scan SAST option 3 - conducted with unofficial task from marketplace using API ID/KEY.
 
 # - task: VeracodePipelineScan@0
 #   displayName: Veracode Pipeline Scan SAST
