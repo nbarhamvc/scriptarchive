@@ -1,0 +1,28 @@
+steps:
+    # Build step
+  - name: maven:3-jdk-8
+    entrypoint: mvn
+    args: ['package','-Dmaven.test.skip=true']
+
+# Pipeline Scan start
+  - name: veracode/pipeline-scan:latest
+    volumes:
+    - name: 'vol1'
+      path: '/home/luser'
+    entrypoint: 'bash'
+    args: ['-c', 'java -jar /opt/veracode/pipeline-scan.jar --veracode_api_id "REFERENCESECRETID" --veracode_api_key "REFERENCESECRETKEY" --fail_on_severity="Very High, High" --file "FILETOUPLOAD"', 'allow_failure:true']
+    # The below directory is needed to account for the json output files. The Veracode docker user does not have permission 
+    # to write directly to the workspace provided by google cloud. Need to work on method to persist the results file
+    dir: '/home/luser'
+  - name: 'ubuntu'
+    volumes:
+    - name: 'vol1'
+      path: '/home/luser'
+    args: ['cat', '/home/luser/results.json']
+    # Pipeline Scan end
+    
+# Upload and scan - Policy or Sandbox start
+  - name: veracode/api-wrapper-java:latest
+    entrypoint: 'bash'
+    args: [ '-c', 'java -jar /opt/veracode/api-wrapper.jar -vid "REFERENCESECRETID" -vkey "REFERENCESECRETKEY" -action UploadAndScan -createprofile true -appname INSERTDESIREDAPPNAMEONVERACODEPLATFORM -version "${SHORT_SHA}_$(date +%F_%H:%M:%S)" -createprofile true  -scantimeout 30 -filepath ./target/verademo.war']
+     
