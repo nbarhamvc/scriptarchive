@@ -4,7 +4,13 @@ steps:
     entrypoint: mvn
     args: ['package','-Dmaven.test.skip=true']
 
-# Pipeline Scan start
+# Agent-based SCA
+#  - name: maven:3-jdk-8
+#    entrypoint: 'bash'
+#    args: ['-c', 'curl -sSL https://download.sourceclear.com/ci.sh | sh -s -- scan --recursive --update-advisor --debug']
+#    secretEnv: ['SRCCLR_API_TOKEN']
+
+# Veracode Pipeline Scan SAST
   - name: veracode/pipeline-scan:latest
     volumes:
     - name: 'vol1'
