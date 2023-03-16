@@ -1,0 +1,13 @@
+# Conducts a crashtest security scan where one has already been configured
+# Uses secret 'CRASHTEST_WEBHOOK' obtained from scan configuration
+# refer to https://wiki.crashtest-security.com for detailed documentation
+
+  crashtest_security_scan:
+    runs-on: ubuntu-latest
+    name: Run Crashtest Security Scan
+    steps:
+      - name: Crashtest Security Action Step
+        uses: crashtest-security/crashtest-security-action@v1.0.0
+        with:
+          crashtest-webhook: '${{ secrets.CRASHTEST_WEBHOOK }}'
+          pull-report: 'true'
