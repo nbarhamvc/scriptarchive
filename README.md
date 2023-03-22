@@ -1,6 +1,6 @@
 # Intro
 
-This is an unofficial collection of scripts and pipeline configuration files that I use, serving as examples for submitting automated Veracode scans in different CI tools. 
+This is an unofficial collection of scripts and pipeline configuration files that I use, serving as examples for submitting automated Veracode scans in different CI tools. You can view other scripts created by the Veracode community and other customers at: https://github.com/veracode/Veracode-Community-Projects
 
 # Good to know 
 
