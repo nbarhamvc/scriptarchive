@@ -1,3 +1,6 @@
+# Set SRCCLR_API_TOKEN as env. variable, use $/% dependent on CI tool
+# Sourceclear was acquired by Veracode in 2018 - trusted domain. Script downloads agent, runs scan, deletes itself.
+
 Set-ExecutionPolicy AllSigned -Scope Process -Force
 $ProgressPreference = "silentlyContinue"; iex ((New-Object System.Net.WebClient).DownloadString('https://download.sourceclear.com/ci.ps1'))
 srcclr scan <LOCATION>
