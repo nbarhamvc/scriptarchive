@@ -1,5 +1,10 @@
+# Contents of this file form the contents of a cloubuild.yaml file called by GCP from your repo.
+
+# Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
+# If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
+# Please note, the Applciation Security Consultant will not be able to assist with pipeline config. Contact your Veracode CSE for assistance with this.
+
 steps:
-    # Build step
   - name: maven:3-jdk-8
     entrypoint: mvn
     args: ['package','-Dmaven.test.skip=true']
@@ -10,7 +15,10 @@ steps:
 #    args: ['-c', 'curl -sSL https://download.sourceclear.com/ci.sh | sh -s -- scan --recursive --update-advisor --debug']
 #    secretEnv: ['SRCCLR_API_TOKEN']
 
-# Veracode Pipeline Scan SAST
+# Veracode Pipeline Scan SAST using docker image, which contains the Pipeline Scan jar file. Uses API ID/KEY environment variables. 
+# Takes artifact from build step and uploads to Veracode servers for scanning (see -f parameter).
+# Note: this scan type could also be conducted outside of a docker image by downloading and calling the wrapper directly.
+
   - name: veracode/pipeline-scan:latest
     volumes:
     - name: 'vol1'
@@ -27,8 +35,13 @@ steps:
     args: ['cat', '/home/luser/results.json']
     # Pipeline Scan end
     
-# Upload and scan - Policy or Sandbox start
+
+# Upload and Scan SAST, SCA using Docker images. A number of parameters can be passed, see docs.veracode.com for relevant article.
+# Takes artifact built earlier and uploads to Veracode platform for scanning.
+# If no sandbox parameter is specified, Policy Scan will take place.
+# Avoid exposing credentials in pipeline, set API ID and KEY as secrets.
+
   - name: veracode/api-wrapper-java:latest
     entrypoint: 'bash'
-    args: [ '-c', 'java -jar /opt/veracode/api-wrapper.jar -vid "REFERENCESECRETID" -vkey "REFERENCESECRETKEY" -action UploadAndScan -createprofile true -appname INSERTDESIREDAPPNAMEONVERACODEPLATFORM -version "${SHORT_SHA}_$(date +%F_%H:%M:%S)" -createprofile true  -scantimeout 30 -filepath ./target/verademo.war']
+    args: [ '-c', 'java -jar /opt/veracode/api-wrapper.jar -vid "REFERENCESECRETID" -vkey "REFERENCESECRETKEY" -action UploadAndScan -createprofile true -appname INSERTDESIREDAPPNAMEONVERACODEPLATFORM -version "${SHORT_SHA}_$(date +%F_%H:%M:%S)" -createprofile true  -scantimeout 30 -filepath ./target/INSERTFILEFORUPLOAD']
      
