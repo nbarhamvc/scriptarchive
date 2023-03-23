@@ -1,10 +1,9 @@
-name: Development branch
+name: Veracode scan examples
 
 # Configured to run on push of development branch. This YML contains all scan types.
 
 on:
-  push:
-    branches: [development]
+  workflow-dispatch
 
 # Note: choosing Linux runner, conscious of using any PowerShell scripts
 
