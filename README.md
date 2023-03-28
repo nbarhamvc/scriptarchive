@@ -8,7 +8,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - Veracode makes use of API credentials and secure tokens to authenticate with the platform and submit scans. There are two types of user - Human and API service accounts. API Service Account IDs and Keys should be used in pipelines. [Further info is available here](https://docs.veracode.com/r/c_about_veracode_accounts).
 
-- Veracode's [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build step/config  prior to uploading the compiled or packaged artifact(s) to Veracode for scanning. There is an abridged packaging cheat sheet [available here](https://nhinv11.github.io/#/).
+- Veracode's [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build step/config  prior to uploading the compiled or packaged artifact(s) to Veracode for SAST scanning. There is an abridged packaging cheat sheet [available here](https://nhinv11.github.io/#/).
 
 - [Supported languages and platforms](https://docs.veracode.com/r/r_supported_table) – showing full language coverage for SAST Sandbox/Policy Scans. Please note, at present the Pipeline Scan language coverage is reduced, [see current list here](https://docs.veracode.com/r/About_Pipeline_Scan_Prerequisites).
 
