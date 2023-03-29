@@ -1,0 +1,100 @@
+# Credit to TLongfren for this script
+# Set Veracode API ID & Key in env variables
+#!/usr/bin/env python3
+
+import sys
+import requests
+import argparse
+import re
+from veracode_api_signing.plugin_requests import RequestsAuthPluginVeracodeHMAC
+
+
+api_base = "https://api.veracode.com/appsec/v1"
+srcclr_api_base = "https://api.veracode.com/srcclr/sbom/v1/targets"
+headers = {"User-Agent": "Python HMAC Example"}
+
+def is_guid(str):
+    # Regex to check valid
+    # GUID (Globally Unique Identifier)
+    regex = "^[{]?[0-9a-fA-F]{8}" + "-([0-9a-fA-F]{4}-)" + "{3}[0-9a-fA-F]{12}[}]?$"
+         
+    # Compile the ReGex
+    p = re.compile(regex)
+ 
+    # If the string is empty
+    # return false
+    if (str == None):
+        return False
+ 
+    # Return if the string
+    # matched the ReGex
+    if(re.search(p, str)):
+        return True
+    else:
+        return False
+
+
+def fetch_sbom(guid):
+    try:
+        response = requests.get(srcclr_api_base + '/' + guid +
+                                '/cyclonedx?type=application',
+                                auth=RequestsAuthPluginVeracodeHMAC(),
+                                headers=headers)
+    except requests.RequestException as e:
+        print(e)
+        sys.exit(1)
+    print(response.text)
+
+
+
+if __name__ == "__main__":
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-l', dest='list', action='store_true')
+        parser.add_argument('app', nargs='?')
+        args = parser.parse_args()
+        if args.app == None:
+            args.list = True
+    except argparse.ArgumentError:
+        sys.exit(1)
+
+    if(args.list):
+        try:
+            # Get list of application profiles
+            response = requests.get(api_base + "/applications",
+                                    auth=RequestsAuthPluginVeracodeHMAC(),
+                                    headers=headers)
+        except requests.RequestException as e:
+            print("Exception!")
+            print(e)
+            sys.exit(1)
+
+        # Just list all apps
+        data = response.json()
+        for app in data["_embedded"]["applications"]:
+            print(f'{app["profile"]["name"]:30}', app["guid"])
+    else:
+        guid=None
+        # User specified an application.
+        if(is_guid(args.app)):
+            guid=args.app
+        else:
+            # Fetch the GUID
+            try:
+                # Get list of application profiles
+                response = requests.get(api_base + "/applications",
+                                        auth=RequestsAuthPluginVeracodeHMAC(),
+                                        headers=headers)
+                data=response.json()
+                for app in data["_embedded"]["applications"]:
+                    if(app["profile"]["name"] == args.app):
+                        guid=app['guid']
+                if(guid == None):
+                    print("No application named " + args.app + " was found.")
+                    sys.exit(1)
+            except requests.RequestException as e:
+                print("Exception!")
+                print(e)
+                sys.exit(1)
+
+        fetch_sbom(guid)
