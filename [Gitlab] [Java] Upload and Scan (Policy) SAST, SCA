@@ -1,3 +1,6 @@
+# YML for use in Gitlab pipelines. Note that many scan types are included here (along with multiple methods of submitting scans) as an EXAMPLE.
+# It may not make sense to have all scans run, sequentially or at all, depending on your workflow.
+
 stages:
     - App-build
     - Policy-scan
