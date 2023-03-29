@@ -1,3 +1,5 @@
+# Config for use in TeamCity project. Note that many scan types are included here (along with multiple methods of submitting scans) as an EXAMPLE.
+# It may not make sense to have all scans run, sequentially or at all, depending on your workflow.
 # Requires setting of VERACODE_API_ID, VERACODE_API_KEY and SRCCLR_API_TOKEN env variables as secret parameters
 # Makes use of latest Pipeline Scan jar wrapper. Could also use Docker image if preferred
 # Makes use of TeamCity plugin for Upload and Scan SAST, SCA. Could also use API wrapper or Docker image if preferred
