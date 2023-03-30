@@ -1,4 +1,4 @@
-# Contents of this file form the contents of a cloubuild.yaml file called by GCP from your repo.
+# Contents of this file form the contents of a cloubuild.yaml file, called by GCP from your repo.
 
 # Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
 # If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
