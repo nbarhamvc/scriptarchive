@@ -10,7 +10,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - Veracode's [packaging requirements for apps](https://docs.veracode.com/r/compilation_packaging) – it is critical that this is adhered to in your build step/config  prior to uploading the compiled or packaged artifact(s) to Veracode for Static Analysis (SAST) scanning. There is an abridged packaging cheat sheet [available here](https://nhinv11.github.io/#/).
 
-- [Supported languages and platforms](https://docs.veracode.com/r/r_supported_table) – showing full language coverage for SAST Sandbox/Policy Scans. Please note, at present the Pipeline Scan language coverage is reduced, [see current list here](https://docs.veracode.com/r/About_Pipeline_Scan_Prerequisites).
+- [Supported languages and platforms](https://docs.veracode.com/r/r_supported_table) – showing full language coverage for SAST Sandbox/Policy Scans. Please note, at present the Pipeline Scan language coverage is reduced, [see current list here](https://docs.veracode.com/r/Pipeline_Scan_Supported_Languages).
 
 - Static Analysis (SAST) identifies potentially exploitable flaws in code you have written. SAST scans can be conducted using a variety of methods - see 'Methods of submitting scans' below for more info. 
 
