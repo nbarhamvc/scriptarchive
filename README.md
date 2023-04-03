@@ -1,6 +1,6 @@
 # Intro
 
-This is an unofficial collection of scripts and pipeline configuration files that I use, serving as examples for submitting automated Veracode scans in different CI tools. You can view other scripts created by the Veracode community and other customers at: https://github.com/veracode/Veracode-Community-Projects
+This is an unofficial collection of scripts and pipeline configuration files that I use, serving as examples for submitting automated Veracode scans in different CI tools. 
 
 # Good to know 
 
@@ -15,6 +15,8 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 - Static Analysis (SAST) identifies potentially exploitable flaws in code you have written. SAST scans can be conducted using a variety of methods - see 'Methods of submitting scans' below for more info. 
 
 - Software Composition Analysis (SCA) identifies known vulnerabilities for your open-source dependencies. Basic results are generated automatically when packaging and scanning your app for Upload and Scan SAST, with more in-depth results visible using Agent-based SCA (see below).
+
+- Veracode develops and supports a number of methods and artifacts for submitting scans, reviewing reuslts and other operations. There are also unofficial plugins, scripts and artifacts developed by Veracoders or other customers which are not officially supported - these are collectively referred to as 'Veracode Community'. You can view a collection of these items at: https://github.com/veracode/Veracode-Community-Projects
 
 # Scan types in these files
 
