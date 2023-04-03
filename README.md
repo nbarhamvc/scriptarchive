@@ -16,6 +16,10 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - Software Composition Analysis (SCA) identifies known vulnerabilities for your open-source dependencies. Basic results are generated automatically when packaging and scanning your app for Upload and Scan SAST, with more in-depth results visible using Agent-based SCA (see below).
 
+- Infrastructure as Code (IaC) identifies misconfigurations and exposed secrets in declarative configuration files for cloud infrastructure.
+
+- Software Bill of Materials (SBOM) is an industry-standardised, portal format for providing a structured inventory of open source components and their supply chain associations.
+
 - Veracode develops and supports a number of methods and artifacts for submitting scans, reviewing reuslts and other operations. There are also unofficial plugins, scripts and artifacts developed by Veracoders or other customers which are not officially supported - these are collectively referred to as 'Veracode Community'. You can view a collection of these items at: https://github.com/veracode/Veracode-Community-Projects
 
 # Scan types in these files
@@ -26,7 +30,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - [Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interface.
 
-- [Veracode Container Security](https://docs.veracode.com/r/Veracode_Container_Security) - Veracode's CLI tool allows for the scanning of archives, repos, images and directories to produce information on SCA vulnerabilities, Infrastructure-as-Code (IaC) misconfiguration, exposed secrets, Software Bill of Materials (SBOM) and a policy pass/fail assessment.
+- [Veracode Container Security](https://docs.veracode.com/r/Veracode_Container_Security) - Veracode's CLI tool allows for the scanning of archives, repos, images and directories to produce information on SCA vulnerabilities, IaC misconfiguration, exposed secrets, SBOM and a policy pass/fail assessment.
 
 # Methods of scan submission
 
