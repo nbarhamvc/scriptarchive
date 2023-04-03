@@ -4,7 +4,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 # Good to know 
 
-- Veracode's [Document Center landing page](https://docs.veracode.com/) is the authoritative resource for viewing step-by-step instructions & coverage for scan type.
+- Veracode's [Document Center landing page](https://docs.veracode.com/) is the authoritative resource for viewing step-by-step instructions & coverage for scan type. The [Glossary](https://docs.veracode.com/r/Veracode_Glossary) provides more information on terminology used here.
 
 - Veracode makes use of API credentials and secure tokens to authenticate with the platform and submit scans. There are two types of user - Human and API service accounts. API Service Account IDs and Keys should be used in pipelines. [Further info is available here](https://docs.veracode.com/r/c_about_veracode_accounts).
 
