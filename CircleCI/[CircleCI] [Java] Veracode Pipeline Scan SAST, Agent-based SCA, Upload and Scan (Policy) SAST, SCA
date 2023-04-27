@@ -53,6 +53,13 @@ jobs:
             -vkey $VERACODE_API_KEY
             -f <INSERTFILEFORSCANNING>
 
+      - run:
+          name: Storing artifacts
+          command: |
+            mkdir /tmp/artifacts;
+      - store_artifacts:
+          path: /home/luser/project/results.json
+
 # Upload and Scan SAST, SCA (Policy or Sandbox Scan) using docker image. A number of parameters can be passed, see docs.veracode.com for relevant article.
 # Takes artifact built earlier and uploads to Veracode platform for scanning.
 # If no sandbox parameter  is specified, Policy Scan will take place.
