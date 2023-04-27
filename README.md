@@ -28,7 +28,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - [Upload and Scan SAST, SCA](https://docs.veracode.com/r/Getting_Started_with_Static_Analysis) - Fully-featured SAST scan type, including basic SCA results and full visibility via Veracode web interface in application profiles. Suited to positioning where there are less frequent commits, as only one scan can be conducted at once and scans cannot be queued. Option to scan at the Policy level which shows compliance, or in a development Sandbox to check compliance without impacting pass/fail state.
 
-- [Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interface.
+- [Agent-based SCA](https://docs.veracode.com/r/Choosing_the_SCA_Scan_Type_for_Your_Use_Case) - For more in-depth SCA results, this scans a repo and provides enhanced information on vulnerabilities, vulnerable methods called by your code, license information and direct/transitive dependencies. Results are visible both in build log and in web user interface, making it suitable for use at any point in dev lifecycle. SBOM files can also be generated.
 
 - [Veracode Container Security](https://docs.veracode.com/r/Veracode_Container_Security) - Veracode's CLI tool allows for the scanning of archives, repos, images and directories to produce information on SCA vulnerabilities, IaC misconfiguration, exposed secrets, SBOM and a policy pass/fail assessment.
 
