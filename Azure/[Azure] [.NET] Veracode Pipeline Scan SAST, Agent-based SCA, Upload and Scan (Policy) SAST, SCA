@@ -4,7 +4,7 @@
 trigger:
 - main
 
-# Note a Windows image is required for the SRCCLR ps1 script later in this YML. Refer to the Java example for use of shell script.
+# Note a Windows image is required for the SRCCLR .ps1 script later in this YML. Refer to the Java YML to see example of .sh script.
 
 pool:
   vmImage: 'windows-latest'
