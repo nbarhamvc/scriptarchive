@@ -2,13 +2,18 @@
 # It may not make sense to have all scans run, sequentially or at all, depending on your workflow.
 
 stages:
-    - App-build
-    - Policy-scan
-    - Crashtest-scan
+    - Build-App
+    - Pipeline-Scan-SAST
+    - Agent-based-SCA
+    - Upload-&-Scan-SAST,SCA(Policy)
+
+# Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
+# If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
+# Please note, the Applciation Security Consultant in a scheduled consultation will not be able to assist with pipeline config. Contact your Veracode CSE for assistance with this.
 
 Compile Application:
     image: maven:3.6.0-jdk-8
-    stage: App-build
+    stage: Build-App
     script:
       - mvn clean package
     artifacts:
@@ -21,32 +26,101 @@ Compile Application:
         - target/
         - .m2/repository
 
-Policy Scan Static Analysis:
+# Veracode Pipeline Scan SAST using docker image, which contains the Pipeline Scan jar file. Uses API ID/KEY environment variables. 
+# Takes artifact from build step and uploads to Veracode server for scanning (see -f parameter).
+# Note: this scan type could also be conducted outside of a docker image by downloading and calling the wrapper directly.
+# The below is making use of the Policy to filter results and is also using the gitlab issue generation parameter. Refer to Veracode documentation to see more parameters or simpler results.
+
+Pipeline Scan SAST:
+    image: veracode/pipeline-scan:latest
+    stage: Pipeline-Scan-SAST
+    except:
+      changes:
+        - pipeline-basline.json
+    script:
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "INSERTPOLICYNAME" 2>&1 | tee pipeline_scan_policy_output.txt
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file INSERTPATHTOFILEFORSCANNING 
+            --policy_file INSERTPOLICYNAME.json 
+            --gl_issue_generation true
+            -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
+    artifacts:
+        paths:
+            - results.json
+            - filtered_results.json
+            - pipeline_scan_text_output.txt
+        when: always
+        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    allow_failure: true
+
+# Agent-based SCA scan submission SRCCLR (Sourceclear) script. Scans repo directly and does not require built artifact. 
+# Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
+# Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan on the target repo, then delete itself.
+# Results fidelity and presentation can be changed to be simpler/recommend fixes etc. Refer to Veracode documnetation for more info.
+
+Agent-based SCA:
+    image: maven:3.6.0-jdk-8
+    stage: Agent-based-SCA
+    script:
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
+    allow_failure: true
+
+# Veracode Pipeline Scan SAST using docker image, which contains the Pipeline Scan jar file. Uses API ID/KEY environment variables. 
+# Takes artifact from build step and uploads to Veracode servers for scanning (see -f parameter).
+# Note: this scan type could also be conducted outside of a docker image by downloading and calling the wrapper directly.
+
+Policy Scan SAST, SCA:
     image: veracode/api-wrapper-java
-    stage: Policy-scan
+    stage: Upload-&-Scan-SAST,SCA(Policy)
     script:
         - java -jar /opt/veracode/api-wrapper.jar 
             -vid ${VERACODE_API_ID} 
             -vkey ${VERACODE_API_KEY}
             -action UploadAndScan 
-            -appname "verademo-gitlab" 
+            -appname "INSERTAPPLICATIONPROFIENAMEONPLATFORM" 
             -createprofile true 
             -autoscan true
-          -filepath ./target/verademo.war 
-          -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
-          -scantimeout 15 2>&1 | tee policy_scan_output.txt
+            -filepath INSERTFILEPATHFORSCANNING 
+            -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+            -scantimeout 15 2>&1 | tee policy_scan_output.txt
     artifacts:
         paths:
-            - policy_scan_output.txt
+        - policy_scan_output.txt
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Crashtest Security Scan:
-  image: alpine:latest
-  stage: Crashtest-scan
-  script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
-  artifacts:
-   when: always
-   reports:
-    junit: test-reports/report.xml
+# Upload & Scan specifying target for sandbox.
+
+# Sandbox Scan SAST, SCA:
+#     image: veracode/api-wrapper-java
+#     stage: Upload & Scan SAST-SCA (Sandbox)
+#     only:
+#         - schedules
+#     script:
+#         - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
+#           -action UploadAndScan 
+#           -appname "INSERTAPPLICATIONPROFILENAMEONPLATFORM"
+#           -createprofile true
+#           -autoscan true
+#           -sandboxname "INSERTDESIREDSANDBOXNAME" 
+#           -createsandbox true
+#           -filepath INSERTFILEPATHFORSCANNING 
+#           -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+#           -scantimeout 15 2>&1 | tee policy_scan_output.txt
+#     artifacts:
+#         paths:
+#             - policy_scan_output.txt
+#         when: always
+#         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+#     allow_failure: true
+
+# Crashtest DAST Scan - uses CRASHTEST_WEBHOOK defined in UI.
+
+# Crashtest Security Scan:
+#  image: alpine:latest
+#  stage: Crashtest DAST Scan
+#  script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
+#  artifacts:
+#   when: always
+#   reports:
+#    junit: test-reports/report.xml
