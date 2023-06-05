@@ -9,7 +9,7 @@ stages:
 
 # Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
 # If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
-# Please note, the Applciation Security Consultant in a scheduled consultation will not be able to assist with pipeline config. Contact your Veracode CSE for assistance with this.
+# Please note, the Application Security Consultant in a scheduled consultation will not be able to assist with pipeline config. Contact your Veracode CSE for assistance with this.
 
 Compile Application:
     image: maven:3.6.0-jdk-8
