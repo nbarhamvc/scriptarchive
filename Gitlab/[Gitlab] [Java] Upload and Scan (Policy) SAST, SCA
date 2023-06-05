@@ -113,14 +113,3 @@ Policy Scan SAST, SCA:
 #         when: always
 #         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
 #     allow_failure: true
-
-# Crashtest DAST Scan - uses CRASHTEST_WEBHOOK defined in UI.
-
-# Crashtest Security Scan:
-#  image: alpine:latest
-#  stage: Crashtest DAST Scan
-#  script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
-#  artifacts:
-#   when: always
-#   reports:
-#    junit: test-reports/report.xml
