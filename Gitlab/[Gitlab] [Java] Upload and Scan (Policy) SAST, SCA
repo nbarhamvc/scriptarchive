@@ -2,10 +2,10 @@
 # It may not make sense to have all scans run, sequentially or at all, depending on your workflow.
 
 stages:
-    - Build-App
-    - Pipeline-Scan-SAST
-    - Agent-based-SCA
-    - Upload-&-Scan-SAST,SCA(Policy)
+    - Build app
+    - Pipeline Scan
+    - Agent-based SCA
+    - Upload and Scan SAST, SCA (Policy or Sandbox)
 
 # Build Java application. Always reference Veracode build packaging guidance at https://docs.veracode.com/r/compilation_packaging for your language/framework.
 # If you have questions about how to package your application correctly, schedule a consultation in the application profile on the Veracode platform.
@@ -13,7 +13,7 @@ stages:
 
 Compile Application:
     image: maven:3.6.0-jdk-8
-    stage: Build-App
+    stage: Build app
     script:
       - mvn clean package
     artifacts:
@@ -29,18 +29,37 @@ Compile Application:
 # Veracode Pipeline Scan SAST using docker image, which contains the Pipeline Scan jar file. Uses API ID/KEY environment variables. 
 # Takes artifact from build step and uploads to Veracode server for scanning (see -f parameter).
 # Note: this scan type could also be conducted outside of a docker image by downloading and calling the wrapper directly.
-# The below is making use of the Policy to filter results and is also using the gitlab issue generation parameter. Refer to Veracode documentation to see more parameters or simpler results.
+# There are two example of the scan below - The first provides summary results info only. The second downloads a copy of the Policy to filter results and generates Gitlab issues. Refer to Veracode documentation to see more parameters.
 
-Pipeline Scan SAST:
+Pipeline Scan SAST (Summary info):
     image: veracode/pipeline-scan:latest
-    stage: Pipeline-Scan-SAST
+    stage: Pipeline Scan
+    needs:
+        - Compile Application
     except:
       changes:
         - pipeline-basline.json
     script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "INSERTPOLICYNAME" 2>&1 | tee pipeline_scan_policy_output.txt
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file INSERTPATHTOFILEFORSCANNING 
-            --policy_file INSERTPOLICYNAME.json 
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file <INSERTFILEFORSCANNING> 
+    artifacts:
+        paths:
+            - results.json
+        when: always
+        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    allow_failure: true
+
+Pipeline Scan SAST (Detailed info):
+    image: veracode/pipeline-scan:latest
+    stage: Pipeline Scan
+    needs:
+        - Compile Application
+    except:
+      changes:
+        - pipeline-basline.json
+    script:
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "INSERTNAMEOFPOLICYONVERACODEPLATFORM" 2>&1 | tee pipeline_scan_policy_output.txt
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file <INSERTFILEPATHFORARTIFACTTOSCAN> --issue_details true
+            --policy_file INSERTNAMEOFPOLICYONVERACODEPLATFORM 
             --gl_issue_generation true
             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
     artifacts:
@@ -55,11 +74,18 @@ Pipeline Scan SAST:
 # Agent-based SCA scan submission SRCCLR (Sourceclear) script. Scans repo directly and does not require built artifact. 
 # Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
 # Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan on the target repo, then delete itself.
-# Results fidelity and presentation can be changed to be simpler/recommend fixes etc. Refer to Veracode documnetation for more info.
+# Results fidelity and presentation can be changed to be simpler/recommend fixes etc. Refer to Veracode documnetation for more info. The first example below provides summary info only, the second gives more detail.
 
-Agent-based SCA:
+Agent-based SCA Summary:
     image: maven:3.6.0-jdk-8
-    stage: Agent-based-SCA
+    stage: Agent-based SCA
+    script:
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --allow-dirty
+    allow_failure: true
+
+Agent-based SCA Detailed:
+    image: maven:3.6.0-jdk-8
+    stage: Agent-based SCA
     script:
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
     allow_failure: true
@@ -68,18 +94,20 @@ Agent-based SCA:
 # Takes artifact from build step and uploads to Veracode servers for scanning (see -f parameter).
 # Note: this scan type could also be conducted outside of a docker image by downloading and calling the wrapper directly.
 
-Policy Scan SAST, SCA:
+Upload and Scan SAST, SCA (Policy or Sandbox):
     image: veracode/api-wrapper-java
-    stage: Upload-&-Scan-SAST,SCA(Policy)
+    stage: Upload and Scan SAST, SCA (Policy or Sandbox)
+    needs:
+        - Compile Application
     script:
         - java -jar /opt/veracode/api-wrapper.jar 
             -vid ${VERACODE_API_ID} 
             -vkey ${VERACODE_API_KEY}
             -action UploadAndScan 
-            -appname "INSERTAPPLICATIONPROFIENAMEONPLATFORM" 
+            -appname "INSERTAPPNAMEONVERACODEPLATFORM" 
             -createprofile true 
             -autoscan true
-            -filepath INSERTFILEPATHFORSCANNING 
+            -filepath <INSERTFILEPATHFORARTIFACTTOSCAN> 
             -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
             -scantimeout 15 2>&1 | tee policy_scan_output.txt
     artifacts:
@@ -89,7 +117,7 @@ Policy Scan SAST, SCA:
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-# Upload & Scan specifying target for sandbox.
+# Upload & Scan specifying target for sandbox:
 
 # Sandbox Scan SAST, SCA:
 #     image: veracode/api-wrapper-java
@@ -104,7 +132,7 @@ Policy Scan SAST, SCA:
 #           -autoscan true
 #           -sandboxname "INSERTDESIREDSANDBOXNAME" 
 #           -createsandbox true
-#           -filepath INSERTFILEPATHFORSCANNING 
+#           -filepath <INSERTFILEPATHFORARTIFACTTOSCAN> 
 #           -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
 #           -scantimeout 15 2>&1 | tee policy_scan_output.txt
 #     artifacts:
