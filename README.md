@@ -14,7 +14,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - Static Analysis (SAST) identifies potentially exploitable flaws in code you have written. SAST scans can be conducted using a variety of methods - see 'Methods of submitting scans' below for more info. 
 
-- Software Composition Analysis (SCA) identifies known vulnerabilities for your open-source dependencies. Basic results are generated automatically when packaging and scanning your app for Upload and Scan SAST, with more in-depth results visible using Agent-based SCA (see below).
+- Software Composition Analysis (SCA) identifies known vulnerabilities for your open-source dependencies. Basic results are generated automatically when packaging and scanning your app for Upload and Scan SAST, with more in-depth results visible using Agent-based SCA (see below). Vulnerability information is also displayed in Veracode Container Security results.
 
 - Infrastructure as Code (IaC) identifies misconfigurations and exposed secrets in declarative configuration files for cloud infrastructure.
 
