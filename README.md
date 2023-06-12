@@ -20,7 +20,7 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 - Software Bill of Materials (SBOM) is an industry-standardised, portal format for providing a structured inventory of open source components and their supply chain associations.
 
-- Veracode develops and supports a number of methods and artifacts for submitting scans, reviewing reuslts and other operations. There are also unofficial plugins, scripts and artifacts developed by Veracoders or other customers which are not officially supported - these are collectively referred to as 'Veracode Community'. You can view a collection of these items at: https://github.com/veracode/Veracode-Community-Projects.
+- Veracode develops and supports a number of methods and artifacts for submitting scans, reviewing results and other operations. There are also unofficial plugins, scripts and artifacts developed by Veracoders or other customers which are not officially supported - these are collectively referred to as 'Veracode Community'. You can view a collection of these items at: https://github.com/veracode/Veracode-Community-Projects.
 
 # Scan types in these files
 
