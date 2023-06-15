@@ -1,8 +1,10 @@
+// Ensure correct Jenkins Maven distribution is specified. The build should refernce the Veracode packaging guidance on docs.veracode.com to ensure you are uploading correct artifacts.
+
 pipeline {
     agent any
 
     environment {
-        VERACODE_APP_NAME = '<ENTERAPPNAME>'      // App Name case sensitivie in the Veracode Platform UI
+        VERACODE_APP_NAME = '<INSERTAPPNAMEINVERACODEPLATFORMUI>'      
         
     }
     stages{
@@ -30,18 +32,18 @@ pipeline {
 
         stage ('Git Checkout') {
             steps {
-                git branch: '<REFERENCEBRANCH>', url: '<REFERENCEREPOURL>'
+                git branch: 'main', url: '<INSERTREPOURL>'
             }
         }
         stage ('build') {
             steps {
-                withMaven(maven:'maven-3') {
+                withMaven(maven:'<SPECIFYMAVENVERSION') {	
                     script {
                         if(isUnix() == true) {
                             sh 'mvn clean package'
                         }
                         else {
-                            bat 'mvn -f <POMXMLPATH> clean package'
+                            bat 'mvn -f pom.xml clean package'
                         }
                     }
                 }
@@ -58,15 +60,9 @@ pipeline {
                         env.HOST_OS = 'Windows'
                     }
                 }
-
                 echo 'Upload and Scan SAST, SCA (Policy/Sandbox)'
-                withCredentials([ usernamePassword ( 
-                    credentialsId: 'veracode_login', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
-                        // fire-and-forget 
-                        // veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', deleteIncompleteScanLevel: '2', debug: true, waitForScan: true, fileNamePattern: '', pHost: '', pPassword: '', pUser: '', replacementPattern: '', scanExcludesPattern: '', scanIncludesPattern: '*.war', scanName: "Verademo-Jenkins-${BUILD_NUMBER}", uploadExcludesPattern: '', uploadIncludesPattern: '<INSERTFILEPATHFORSCANNING>', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
-
-                        // wait for scan to complete (timeout: x)
-                        veracode applicationName: '${VERACODE_APP_NAME}'', criticality: 'VeryHigh', debug: true, timeout: 20, fileNamePattern: '', pHost: '', pPassword: '', pUser: '', replacementPattern: '', sandboxName: '', scanExcludesPattern: '', scanIncludesPattern: '', scanName: "${BUILD_TAG}", uploadExcludesPattern: '', uploadIncludesPattern: '<INSERTFILEPATHFORSCANNING>', vid: '${VERACODE_API_ID}', vkey: '${VERACODE_API_KEY}'
+                 withCredentials([usernamePassword(credentialsId: '<ENTERCREDENTIALSID>', passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
+                veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', canFailJob: true, debug: false, deleteIncompleteScanLevel: '0', scanIncludesPattern: '<DEFINEFILEFORSCANNING>', scanName: '$timestamp', timeout: 60, uploadIncludesPattern: '<DEFINEFILEFORUPLOAD>', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
                     }      
             }
         }
@@ -74,7 +70,7 @@ pipeline {
        stage ('Agent-based SCA') {
            steps {
                echo 'Agent-based SCA'
-               withCredentials([ string(credentialsId: 'SCA_Token', variable: 'SRCCLR_API_TOKEN')]) {
+               withCredentials([ string(credentialsId: 'SRCCLR_API_TOKEN', variable: 'SRCCLR_API_TOKEN')]) {
                    withMaven(maven:'maven-3') {
                        script {
                            if(isUnix() == true) {
@@ -88,7 +84,7 @@ pipeline {
                                            Set-ExecutionPolicy AllSigned -Scope Process -Force
                                            $ProgressPreference = "silentlyContinue"
                                            iex ((New-Object System.Net.WebClient).DownloadString('https://download.srcclr.com/ci.ps1'))
-                                           srcclr scan 
+                                           srcclr scan --allow-dirty 
                                            '''
                            }
                        }
