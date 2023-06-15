@@ -1,3 +1,9 @@
+// Pipeline Script with 'Groovy Sandbox' checkbox enabled (needs Groovy plugin installing)
+// Veracode Upload and Scan plugin on marketplace has been installed to auto-generate Pipeline Syntax snippet for Upload & Scan (Policy)
+// Credentials Binding plugin used for separate username/pw $VERACODE_API_ID, $VERACODE_API_KEY and $SRCCLR_API_TOKEN as secrets
+// Note that many scan types are included here (along with multiple methods of submitting scans) as an EXAMPLE.
+// It may not make sense to have all scans run, sequentially or at all, depending on your branching strategy or release workflow.
+
 pipeline {
     agent any
 
