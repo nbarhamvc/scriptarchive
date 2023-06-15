@@ -1,0 +1,100 @@
+pipeline {
+    agent any
+
+    environment {
+        VERACODE_APP_NAME = '<ENTERAPPNAME>'      // App Name case sensitivie in the Veracode Platform UI
+        
+    }
+    stages{
+        stage ('environment verify') {
+            steps {
+                script {
+                    if (isUnix() == true) {
+                        sh 'pwd'
+                        sh 'ls -la'
+                        sh 'echo $PATH'
+                    }
+                    else {
+                        bat 'dir'
+                        bat 'echo %PATH%'
+                    }
+                }
+            }
+        }
+		
+		stage ('Clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage ('Git Checkout') {
+            steps {
+                git branch: '<REFERENCEBRANCH>', url: '<REFERENCEREPOURL>'
+            }
+        }
+        stage ('build') {
+            steps {
+                withMaven(maven:'maven-3') {
+                    script {
+                        if(isUnix() == true) {
+                            sh 'mvn clean package'
+                        }
+                        else {
+                            bat 'mvn -f <POMXMLPATH> clean package'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage ('Upload and Scan SAST, SCA (Policy/Sandbox)') {
+            steps {
+                script {
+                    if(isUnix() == true) {
+                        env.HOST_OS = 'Unix'
+                    }
+                    else {
+                        env.HOST_OS = 'Windows'
+                    }
+                }
+
+                echo 'Upload and Scan SAST, SCA (Policy/Sandbox)'
+                withCredentials([ usernamePassword ( 
+                    credentialsId: 'veracode_login', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
+                        // fire-and-forget 
+                        // veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', deleteIncompleteScanLevel: '2', debug: true, waitForScan: true, fileNamePattern: '', pHost: '', pPassword: '', pUser: '', replacementPattern: '', scanExcludesPattern: '', scanIncludesPattern: '*.war', scanName: "Verademo-Jenkins-${BUILD_NUMBER}", uploadExcludesPattern: '', uploadIncludesPattern: 'app/target/verademo.war', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
+
+                        // wait for scan to complete (timeout: x)
+                        //veracode applicationName: '${VERACODE_APP_NAME}'', criticality: 'VeryHigh', debug: true, timeout: 20, fileNamePattern: '', pHost: '', pPassword: '', pUser: '', replacementPattern: '', sandboxName: '', scanExcludesPattern: '', scanIncludesPattern: '', scanName: "${BUILD_TAG}", uploadExcludesPattern: '', uploadIncludesPattern: 'target/verademo.war', vid: '${VERACODE_API_ID}', vkey: '${VERACODE_API_KEY}'
+                    }      
+            }
+        }
+
+       stage ('Agent-based SCA') {
+           steps {
+               echo 'Agent-based SCA'
+               withCredentials([ string(credentialsId: 'SCA_Token', variable: 'SRCCLR_API_TOKEN')]) {
+                   withMaven(maven:'maven-3') {
+                       script {
+                           if(isUnix() == true) {
+                               sh "curl -sSL https://download.sourceclear.com/ci.sh | sh"
+
+                                // debug, no upload
+                               //sh "curl -sSL https://download.sourceclear.com/ci.sh | DEBUG=1 sh -s -- scan --no-upload"
+                           }
+                           else {
+                               powershell '''
+                                           Set-ExecutionPolicy AllSigned -Scope Process -Force
+                                           $ProgressPreference = "silentlyContinue"
+                                           iex ((New-Object System.Net.WebClient).DownloadString('https://download.srcclr.com/ci.ps1'))
+                                           srcclr scan 
+                                           '''
+                           }
+                       }
+                   }
+               }
+           }
+       }
+    }
+}
