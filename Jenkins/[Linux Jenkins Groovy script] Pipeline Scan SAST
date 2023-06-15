@@ -7,13 +7,13 @@ pipeline {
 agent any
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
-        maven "3.8.6"
+        maven "<ENTERVERSION>"
     }
     stages {
         stage('Build') {
             steps {
                 // Get some code from a GitHub repository
-                git branch: 'main', url: 'https://gitlab.com/vcnbarham/verademo-gitlab.git'
+                git branch: '<BRANCH>', url: '<REPOFORSCANNING>'
                 // Maven build
                 sh "mvn clean package"
             }
@@ -29,7 +29,7 @@ stage('Veracode Pipeline Scan') {
 						sh 'java -jar pipeline-scan.jar \
 						--veracode_api_id ${VERACODE_API_ID} \
 						--veracode_api_key ${VERACODE_API_KEY} \
-						--file "target/verademo.war"'
+						--file "<FILEPATHFORSCANNING>"'
 						} catch (err) {
 							echo 'Error code: ' + err.getMessage().substring(26)
 						}
