@@ -1,14 +1,12 @@
-// Ensure correct Jenkins Maven distribution is specified. The build should refernce the Veracode packaging guidance on docs.veracode.com to ensure you are uploading correct artifacts.
-
 pipeline {
     agent any
 
     environment {
-        VERACODE_APP_NAME = '<INSERTAPPNAMEINVERACODEPLATFORMUI>'      
+        VERACODE_APP_NAME = '<INSERTAPPNAME>'      // App Name case sensitive in the Veracode Platform UI
         
     }
     stages{
-        stage ('environment verify') {
+        stage ('environment verify') {              // Determines if Linux or Windows environment
             steps {
                 script {
                     if (isUnix() == true) {
@@ -30,14 +28,14 @@ pipeline {
             }
         }
 
-        stage ('Git Checkout') {
+        stage ('Git Checkout') {                    // Checking out source for use in building app/running Agent-based SCA
             steps {
-                git branch: 'main', url: '<INSERTREPOURL>'
+                git branch: '<BRANCHTOBUILD>', url: '<URLOFREPO>'
             }
         }
-        stage ('build') {
+        stage ('build') {                           // Build step should reference the Veracode Packaging guidance at docs.veracode.com. Please refer to your language/framework.
             steps {
-                withMaven(maven:'<SPECIFYMAVENVERSION>') {	
+                withMaven(maven:'<REFERENCEMAVENVERSION>') {        // Need to ensure correct Maven referenced here
                     script {
                         if(isUnix() == true) {
                             sh 'mvn clean package'
@@ -50,37 +48,20 @@ pipeline {
             }
         }
 
-        stage ('Upload and Scan SAST, SCA (Policy/Sandbox)') {
-            steps {
-                script {
-                    if(isUnix() == true) {
-                        env.HOST_OS = 'Unix'
-                    }
-                    else {
-                        env.HOST_OS = 'Windows'
-                    }
-                }
-                echo 'Upload and Scan SAST, SCA (Policy/Sandbox)'
-                 withCredentials([usernamePassword(credentialsId: '<ENTERCREDENTIALSID>', passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
-                veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', canFailJob: true, debug: false, deleteIncompleteScanLevel: '0', scanIncludesPattern: '<DEFINEFILEFORSCANNING>', scanName: '$timestamp', timeout: 60, uploadIncludesPattern: '<DEFINEFILEFORUPLOAD>', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
-                    }      
-            }
-        }
-
        stage ('Agent-based SCA') {
            steps {
                echo 'Agent-based SCA'
-               withCredentials([ string(credentialsId: 'SRCCLR_API_TOKEN', variable: 'SRCCLR_API_TOKEN')]) {
-                   withMaven(maven:'maven-3') {
+               withCredentials([ string(credentialsId: '<CREDENTIALSID>', variable: 'SRCCLR_API_TOKEN')]) {    // SRCCLR_API_TOKEN is generated in Veracode platform for a workspace. Refer to Veracode docs for instructions.
+                   withMaven(maven:'<REFERENCEMAVENVERSION>') {     // Need to ensure correct Maven referenced here
                        script {
-                           if(isUnix() == true) {
-                               sh "curl -sSL https://download.sourceclear.com/ci.sh | sh"
+                           if(isUnix() == true) {   // This is the shell script for use on Linux
+                               sh "curl -sSL https://download.sourceclear.com/ci.sh | sh"   // Sourceclear is a trusted domain (acquired by Veracode in 2018)
 
                                 // debug, no upload
                                //sh "curl -sSL https://download.sourceclear.com/ci.sh | DEBUG=1 sh -s -- scan --no-upload"
                            }
-                           else {
-                               powershell '''
+                           else {                   // This is the Powershell script for use on Windows
+                               powershell '''       
                                            Set-ExecutionPolicy AllSigned -Scope Process -Force
                                            $ProgressPreference = "silentlyContinue"
                                            iex ((New-Object System.Net.WebClient).DownloadString('https://download.srcclr.com/ci.ps1'))
@@ -92,5 +73,56 @@ pipeline {
                }
            }
        }
+
+        stage ('Veracode Pipeline Scan') {
+        			steps {
+        				withCredentials([ usernamePassword (credentialsId: '<INSERTCREDENTIALSID>', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
+        					script {
+        					if(isUnix() == true) {
+        					try {
+        						sh 'curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip'
+        						sh 'unzip -u pipeline-scan-LATEST.zip pipeline-scan.jar'
+        						sh 'java -jar pipeline-scan.jar \
+        						--veracode_api_id ${VERACODE_API_ID} \
+        						--veracode_api_key ${VERACODE_API_KEY} \
+        						--file "<FILEPATHFORSCANNING>" || true'
+        						} catch (err) {
+        							echo 'Error code: ' + err.getMessage().substring(26)
+        						}
+        					}
+        					else {
+        					    powershell '''
+                                    invoke-Command {
+                                    Write-Output 'Download PipelineScanner'
+                                    Invoke-WebRequest -Uri https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip -OutFile ./pipeline-scan.zip
+                                    Write-Output 'Unzip Pipeline Scan zip'
+                                    Expand-Archive -LiteralPath ./pipeline-scan.zip
+                                    Write-Output 'Run Pipeline Scanner'
+                                    java -jar ./pipeline-scan/pipeline-scan.jar -vid $env:VERACODE_API_ID -vkey $env:VERACODE_API_KEY -f <FILEPATHFORSCANNING> 
+                                    exit 0
+                                                                        }
+                                    '''
+        				}
+        			}
+        		}
+    		}	
+        }
+    
+        stage ('Upload and Scan SAST, SCA (Policy/Sandbox)') {
+            steps {
+                script {
+                    if(isUnix() == true) {
+                        env.HOST_OS = 'Unix'
+                    }
+                    else {
+                        env.HOST_OS = 'Windows'
+                    }
+                }
+                echo 'Upload and Scan SAST, SCA (Policy/Sandbox)'
+                 withCredentials([usernamePassword(credentialsId: '<INSERTCREDENTIALSID>', passwordVariable: 'VERACODE_API_KEY', usernameVariable: 'VERACODE_API_ID')]) {
+                veracode applicationName: "${VERACODE_APP_NAME}", criticality: 'VeryHigh', canFailJob: true, debug: false, deleteIncompleteScanLevel: '0', scanIncludesPattern: '<FILEPATHFORSCANNING>', scanName: '$timestamp', timeout: 60, uploadIncludesPattern: '<FILEPATHFORUPLOAD>', vid: "${VERACODE_API_ID}", vkey: "${VERACODE_API_KEY}"
+                    }      
+            }
+        }
     }
 }
