@@ -80,7 +80,7 @@ pipeline {
            }
        }
 
-        stage ('Veracode Pipeline Scan') {
+        stage ('Pipeline Scan SAST') {
         			steps {
         				withCredentials([ usernamePassword (credentialsId: '<INSERTCREDENTIALSID>', usernameVariable: 'VERACODE_API_ID', passwordVariable: 'VERACODE_API_KEY') ]) {
         					script {
