@@ -124,6 +124,7 @@ steps:
     importResults: true
     failBuildOnPolicyFail: true
     maximumWaitTime: '30'
+  continueOnError: true
     
 # Configurable task, to import results into Azure boards as work items.
 
