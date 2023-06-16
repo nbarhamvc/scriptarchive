@@ -144,7 +144,7 @@ steps:
 - task: Veracode@3
   displayName: Upload and Scan SAST, SCA
   inputs:
-    ConnectionDetailsSelection: 'Endpoint'
+    ConnectionDetailsSelection: 'Service Connection'
     AnalysisService: 'Veracode'
     veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
     version: '$(build.buildNumber)'
@@ -153,13 +153,14 @@ steps:
     importResults: true
     failBuildOnPolicyFail: true
     maximumWaitTime: '30'
+  continueOnError: true
     
 # Task to import results into Azure board projects as work items/bugs etc.
 
 - task: Veracode Flaw Importer@3
   displayName: Import Upload and Scan results as flaws
   inputs:
-    ConnectionDetailsSelection: 'Endpoint'
+    ConnectionDetailsSelection: 'Service Connection'
     AnalysisService: 'Veracode'
     veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
     importType: 'All Unmitigated Flaws Violating Policy'
