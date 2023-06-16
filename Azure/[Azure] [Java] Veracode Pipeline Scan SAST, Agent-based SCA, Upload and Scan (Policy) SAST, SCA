@@ -115,7 +115,7 @@ steps:
 - task: Veracode@3
   displayName: Upload and Scan SAST, SCA
   inputs:
-    ConnectionDetailsSelection: 'Endpoint'
+    ConnectionDetailsSelection: 'Service Connection'
     AnalysisService: 'Veracode'
     veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
     version: '$(build.buildNumber)'
@@ -131,7 +131,7 @@ steps:
 - task: Veracode Flaw Importer@3
   displayName: Import flaws if scan fails Policy
   inputs:
-    ConnectionDetailsSelection: 'Endpoint'
+    ConnectionDetailsSelection: 'Service Connection'
     AnalysisService: 'Veracode'
     veracodeAppProfile: '<INSERTAPPNAMEONVERACODEPLATFORM>'
     importType: 'All Unmitigated Flaws Violating Policy'
