@@ -14,7 +14,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $str = '{"name": "<INSERTDANAMEONVERACODEPLATFORM", "schedule": { "duration": { "length": 1, "unit": "DAY" }, "scheduled": true, "now": true } } ' 
+      $str = '{"name": "<INSERTDASTNAMEONVERACODEPLATFORM", "schedule": { "duration": { "length": 1, "unit": "DAY" }, "scheduled": true, "now": true } } ' 
       Write-Output $str | Out-file -FilePath ./input.json
       ls
       Get-Content input.json
@@ -42,4 +42,4 @@ steps:
       pip install -r requirements.txt
       cd ..
       Write-Output "Creating new Dynamic configuration"
-      Get-Content ./input.json |  http --auth-type=veracode_hmac PUT "https://api.veracode.com/was/configservice/v1/analyses/<ENTERSTRINGINDASTURLONVERACODEPLATFORM>?method=PATCH"
+      Get-Content ./input.json |  http --auth-type=veracode_hmac PUT "https://api.veracode.com/was/configservice/v1/analyses/<ENTERDASTURLSTRINGONVERACODEPLATFORM>?method=PATCH"
