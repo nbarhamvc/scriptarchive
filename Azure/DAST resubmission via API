@@ -1,0 +1,45 @@
+#########################################################################
+# Creation of JSON to configure scan
+#########################################################################
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: PowerShell@2
+  displayName: Veracode DAST Configuration JSON
+  inputs:
+    targetType: 'inline'
+    script: |
+      $str = '{"name": "<INSERTDANAMEONVERACODEPLATFORM", "schedule": { "duration": { "length": 1, "unit": "DAY" }, "scheduled": true, "now": true } } ' 
+      Write-Output $str | Out-file -FilePath ./input.json
+      ls
+      Get-Content input.json
+
+#########################################################################
+# Downloading and installing HTTPIE for HMAC REST Requests
+#########################################################################
+# HTTPIE documentation: https://httpie.io/docs/cli/universal
+# Veracode Documentation: https://docs.veracode.com/r/c_httpie_tool
+
+- task: PowerShell@2
+  displayName: Veracode REST API Calls
+  continueOnError: true
+  env:
+    VERACODE_API_KEY_SECRET: $(VERACODE_API_KEY)
+    VERACODE_API_KEY_ID: $(VERACODE_API_ID)
+  inputs:
+    targetType: 'inline'
+    script: |
+      python --version
+      python -m pip install --upgrade pip wheel
+      python -m pip install httpie
+      git clone https://github.com/veracode/veracode-python-hmac-example.git
+      cd veracode-python-hmac-example
+      pip install -r requirements.txt
+      cd ..
+      Write-Output "Creating new Dynamic configuration"
+      Get-Content ./input.json |  http --auth-type=veracode_hmac PUT "https://api.veracode.com/was/configservice/v1/analyses/<ENTERSTRINGINDASTURLONVERACODEPLATFORM>?method=PATCH"
