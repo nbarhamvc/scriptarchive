@@ -1,0 +1,49 @@
+# This YML makes use of an unofficial/unsupported Python script written by a Veracode colleague
+# It runs a Pipeline Scan on Merge Request and adds results to the comments - see https://gitlab.com/wasptree/veracode-glmc for source
+# Requires the creation of a GITLAB_PRIVATE_TOKEN and the insertion of this token as a variable in CI/CD settings
+# See https://docs.veracode.com/r/r_pipeline_scan_commands for additional Pipeline Scan parameters.
+
+stages:
+    - Build app for MR
+    - Pipeline Scan for MR
+    - MR Decoration
+
+Build app for MR:
+    stage: Build app for MR
+    image: maven:3.6.0-jdk-8
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    script:
+      - mvn clean package
+    artifacts:
+      name: verademo-gitlab
+      paths:
+        - target/
+      expire_in: 5 week
+    cache:
+      paths:
+        - target/
+        - .m2/repository
+
+Pipeline Scan for MR:
+    image: veracode/pipeline-scan:latest
+    stage: Pipeline Scan for MR
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    script:
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
+    artifacts:
+      when: always
+      paths:
+        - summary_report.txt
+      expire_in: 1 day
+    allow_failure: true
+
+MR Decoration:
+    image: wasptree/veracode-glmc
+    stage: MR Decoration
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    script:
+        - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
+    allow_failure: true
