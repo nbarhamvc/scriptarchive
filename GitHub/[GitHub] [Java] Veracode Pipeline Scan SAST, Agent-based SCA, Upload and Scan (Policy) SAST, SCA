@@ -185,3 +185,25 @@ jobs:
           vid: '${{ secrets.VERACODE_API_ID }}'
           vkey: '${{ secrets.VERACODE_API_KEY }}'
           scantimeout: 15
+
+# Veracode Container Security scan using GH Action. Set up to scan deliberately insecure Terraform directory using API ID and Key
+
+  Container-Security:
+      runs-on: ubuntu-latest
+      name: Verracode Container/IaC/Secrets scan
+
+      steps:
+        - name: checkout
+          uses: actions/checkout@v3
+
+        - name: Veracode Container/IaC/Secrets action step
+          uses: veracode/container_iac_secrets_scanning@v1.0.0
+          with:
+            vid: ${{ secrets.VERACODE_API_ID }}
+            vkey: ${{ secrets.VERACODE_API_KEY }}
+            command: "scan" 
+            type: "repo"
+            source: "https://github.com/bridgecrewio/terragoat"
+            format: "json"
+            debug: false
+            fail_build: false
