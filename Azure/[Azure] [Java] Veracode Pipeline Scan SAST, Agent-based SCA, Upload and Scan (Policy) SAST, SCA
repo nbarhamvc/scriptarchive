@@ -40,7 +40,7 @@ steps:
       java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(System.DefaultWorkingDirectory)<INSERTFILEFORSCANNING> || true 
 - publish: $(System.DefaultWorkingDirectory)/results.json
 
-# Pipeline Scan SAST option 2 - conducted with unofficial task from marketplace using API ID/KEY.
+# Pipeline Scan SAST option 2 - conducted with unofficial/unsupported task from Azure marketplace, using API ID/KEY.
 
 # - task: VeracodePipelineScan@0
 #   displayName: Veracode Pipeline Scan SAST
