@@ -1,0 +1,35 @@
+name: Veracode pass/fail check
+
+on: 
+  workflow_dispatch
+
+jobs:
+  VeracodePassFail:
+    runs-on: ubuntu-latest
+    steps:
+
+## Downloading the latest Veracode java wrapper form Maven central. Refer to https://docs.veracode.com/r/t_working_with_java_wrapper for more information:
+
+    - name: Download JAR
+      run: |
+        curl -O "https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.8.12.0/vosp-api-wrappers-java-23.8.12.0.jar"
+
+## Calling Java wrapper, passing API ID and Key secrets, passfail composite action (see https://docs.veracode.com/r/c_wrapper_composite_actions) and the application profile name as it is on the Veracode platform:
+
+    - name: Pass/Fail Policy check
+      id: run-command
+      run: |
+        java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github
+      continue-on-error: true
+
+## NOTE: THE retry@v2 action is not an official Veracode action. It is used here for polling example purposes, should the scan have not completed by the time this step in the pipeline is reached.
+
+    - name: Pass/Fail Policy check with retries
+      uses: nick-fields/retry@v2
+      with:
+        max_attempts: 5
+        retry_on: error
+        retry_wait_seconds: 30
+        timeout_minutes: 5
+        command:
+          java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github
