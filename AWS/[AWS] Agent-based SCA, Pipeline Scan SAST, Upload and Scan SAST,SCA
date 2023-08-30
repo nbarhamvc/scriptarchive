@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      mvn clean package
+ 
+ # Agent-based SCA using Sourceclear script. Uses SRCCLR_API_TOKEN stored as env variable.
+ 
+  post_build:
+    commands:
+      - curl -sSL https://download.sourceclear.com/ci.sh | sh
+ 
+ # Veracode Pipeline Scan using pipelinescan.jar. Uses API ID & Key stored as env variables.
+ 
+      - curl -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+      - unzip -u pipeline-scan-LATEST.zip pipeline-scan.jar
+      - java -jar pipeline-scan.jar -vid $VID -vkey $VKEY -f ./target/verademo.war || true
+
+ # Policy/Sandbox Scan using Java wrapper. Uses API ID & Key stored as env variables.
+ 
+      - curl -O https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.8.12.0/vosp-api-wrappers-java-23.8.12.0.jar
+      - java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid $VID -vkey $VKEY -appname verademo-aws -action UploadAndScan -createprofile false -version $CODEBUILD_BUILD_ID -scantimeout 30 -filepath ./target/verademo.war
