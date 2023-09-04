@@ -73,7 +73,7 @@ jobs:
 
         - name: Convert pipeline scan output to SARIF format 
           id: convert
-          uses: veracode/veracode-pipeline-scan-results-to-sarif@v0.1.5
+          uses: veracode/veracode-pipeline-scan-results-to-sarif@v1.0.5
           with:
             pipeline-results-json: results.json
             source-base-path-1: "^com/veracode:src/main/java/com/veracode"
@@ -109,7 +109,7 @@ jobs:
             path: /tmp
     
         - name: Veracode Pipeline-Scan action
-          uses: veracode/Veracode-pipeline-scan-action@pipeline-scan-beta-v0.0.4
+          uses: veracode/Veracode-pipeline-scan-action@v1.0.9
           with:
             vid: "${{secrets.VERACODE_API_ID}}"
             vkey: "${{secrets.VERACODE_API_KEY}}"
@@ -130,7 +130,7 @@ jobs:
           - name: Run Veracode SCA
             env:
               SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}
-            uses: veracode/veracode-sca@v1.09
+            uses: veracode/veracode-sca@v2.1.9
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               create-issues: false
@@ -152,7 +152,7 @@ jobs:
           path: .
     
       - name: Sandbox Scan
-        uses: veracode/veracode-uploadandscan-action@master
+        uses: veracode/veracode-uploadandscan-action@0.2.6
         with:
           appname: "verademo-github"
           createsandbox: false
@@ -176,7 +176,7 @@ jobs:
           path: .
       
       - name: Policy Scan
-        uses: veracode/veracode-uploadandscan-action@master
+        uses: veracode/veracode-uploadandscan-action@0.2.6
         with:
           createprofile: false
           appname: "verademo-github"
