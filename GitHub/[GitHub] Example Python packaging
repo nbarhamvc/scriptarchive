@@ -1,0 +1,28 @@
+name: Python application
+
+on:
+  workflow_dispatch
+
+jobs:
+  Package:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Exclude non-relevant directories
+      run: |
+        find . -type d -name 'opensourcelibrarydirectory' -exec rm -rf {} +
+      working-directory: ${{ github.workspace }}
+
+    - name: Create ZIP archive
+      run: |
+        zip -r ${{ github.run_id }}.zip .
+      working-directory: ${{ github.workspace }}
+
+    - name: Upload ZIP archive
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.run_id }} zipped app
+        path: ${{ github.run_id }}.zip
