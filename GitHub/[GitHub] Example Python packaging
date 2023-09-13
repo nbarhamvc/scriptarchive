@@ -22,7 +22,7 @@ jobs:
         if ! test -f pipfile.lock ; then
         echo "SCA results may not be displayed as pipfile.lock missing"
         fi
-  working-directory: ${{ github.workspace }}
+      working-directory: ${{ github.workspace }}
 
 # Creating a zip of the app for upload to Veracode
 
