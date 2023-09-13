@@ -1,5 +1,7 @@
 name: Python application
 
+# Manual trigger of pipeline
+
 on:
   workflow_dispatch
 
@@ -11,15 +13,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+# Per packaging guidance noted at https://docs.veracode.com/r/compilation_python, third-party components should be excluded from the packaged artifact and the pipfile.lock included in the root.
+# Below will exclude certain directories and notify if pipfile.lock is missing
+
     - name: Exclude non-relevant directories
       run: |
         find . -type d -name 'youropensourcelibrarydirectoryifthereisone' -exec rm -rf {} +
-      working-directory: ${{ github.workspace }}
+        if ! test -f pipfile.lock ; then
+        echo "SCA results may not be displayed as pipfile.lock missing"
+        fi
+  working-directory: ${{ github.workspace }}
+
+# Creating a zip of the app for upload to Veracode
 
     - name: Create ZIP archive
       run: |
         zip -r ${{ github.run_id }}.zip .
       working-directory: ${{ github.workspace }}
+
+# Storing zipped application as artifact for subsequent upload to Veracode
 
     - name: Upload ZIP archive
       uses: actions/upload-artifact@v2
