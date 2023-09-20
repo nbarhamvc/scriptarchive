@@ -104,7 +104,7 @@ steps:
   env:
     SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
   inputs:
-    script: 'curl -sSL  https://download.sourceclear.com/ci.sh | sh'
+    script: 'curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty'
 #   workingDirectory: $<specify target if not pwd> e.g. {{ parameters.projectPath }}
 
 # Upload and Scan SAST, SCA (Policy or Sandbox Scan) using the marketplace task. A number of parameters can be passed, see docs.veracode.com for relevant article.
