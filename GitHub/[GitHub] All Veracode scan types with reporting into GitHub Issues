@@ -3,6 +3,7 @@
 # IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets ${{secrets.VERACODE_API_ID}} and ${{secrets.VERACODE_API_KEY}} 
 # Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation.
 # This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive.
+# The offical Veracode manual for GitHub is accessible at https://github.com/veracode/Veracode-manual-for-GitHub and contains additional options for PR decoration, flow control etc.
 
 ########## PIPELINE TRIGGER ###########
 
