@@ -1,0 +1,285 @@
+########## GENERAL INFORMATION ###########
+
+# IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets ${{secrets.VERACODE_API_ID}} and ${{secrets.VERACODE_API_KEY}} 
+# Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation.
+# This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive.
+
+########## PIPELINE TRIGGER ###########
+
+# Pipeline is configured to run manually for demonstration purposes only. Typically would not run all of these scans sequentially, for example may run on Merge Request.
+# For more assistance with where and when to run these scans, contact your Vercode CSM and they will arrange a resource.
+
+name: Reporting test workflow
+on: workflow_dispatch
+
+jobs:
+
+########## CHECK OUT CODE, PACKAGE WAR AND STORE ARTIFACT ###########
+
+# IMPORTANT: You must package your application correctly per: https://docs.veracode.com/r/compilation_packaging, or using the cheat sheet: https://docs.veracode.com/cheatsheet/
+# If after reading the guidance you need additional help packaging, please log into the Veracode web UI and click the 'Schedule a Consultation' button to schedule a call.
+# Note the team that will join a call to help with packaging will not be able to help with pipeline configuration. Contact your Veracode CSM and they will arrange a resource.
+
+  Checkoutandbuild:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Check out code
+      uses: actions/checkout@v3
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - name: Store WAR artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: verademo.war
+        path: target/verademo.war
+
+########## VERACODE PIPLINE SCAN SAST ###########
+
+# IMPORTANT: The upload limit for Pipeline Scans is 200MB.
+# Results from Pipeline Scan are not visible in the web UI. They are visible in the build log and as a results.json file.
+# Language coverage is reduced when compared with Upload and Scan. See coverage here: https://docs.veracode.com/r/Pipeline_Scan_Supported_Languages
+# The below makes use of the Veracode GitHub Actions relating to Pipeline Scan and import into GitHub Issues.
+
+  VeracodePipelineScan:
+    needs: Checkoutandbuild
+    runs-on: ubuntu-latest
+   
+    steps:
+    
+    - name: Obtain war file for upload
+      uses: actions/download-artifact@v3
+      with: 
+       name: verademo.war
+       path: .
+    
+    - name: Veracode Pipeline-Scan
+      uses: veracode/Veracode-pipeline-scan-action@v1.0.9
+      with:
+        vid: ${{secrets.VERACODE_API_ID}}
+        vkey: ${{secrets.VERACODE_API_KEY}}
+        file: ./verademo.war
+        token: ${{ github.token }}
+        # request_policy: # optional
+        fail_on_severity: Very High
+        # fail_on_cwe: # optional
+        # baseline_file: # optional
+        # policy_name: # optional (note only default policies)
+        # policy_file: # optional
+        # timeout: # optional
+        # issue_details: # optional
+        # summary_display: # optional
+        # json_display: # optional
+        # verbose: # optional
+        # summary_output: # optional
+        # summary_output_file: # optional
+        # json_output: # optional
+        # json_output_file: # optional
+        filtered_json_output_file: filtered_results.json
+        # project_name: # optional
+        # project_url: # optional
+        # project_ref: # optional
+        # app_id: # optional
+        # development_stage: # optional
+        # debug: # optional
+        # store_baseline_file: # optional
+        # store_baseline_file_branch: # optional
+        # create_baseline_from: # optional
+        fail_build: false
+        # include: # optional
+
+    - name: Store filtered results
+      uses: actions/upload-artifact@v3
+      with:
+        name: filtered-results
+        path: filtered_results.json
+
+  VeracodePipelineScanResultsImport:
+    needs: VeracodePipelineScan
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Get scan results
+      uses: actions/download-artifact@v3
+      with:
+        name: filtered-results
+    
+    - name: Veracode scan results to GitHub issues Action
+      uses: veracode/veracode-flaws-to-issues@v2.1.20
+      with:
+        scan-results-json: filtered_results.json
+        github-token: ${{ github.token }}
+        # wait-time: # optional, default is 2
+        source-base-path-1: "^com/veracode:src/main/java/com/veracode"
+        source-base-path-2: "^WEB-INF:src/main/webapp/WEB-INF"
+        # source_base_path_3: # optional
+        # fail_build: # optional
+        # debug: # optional
+
+########## VERACODE UPLOAD AND SCAN SAST, SCA (Policy or Sandbox Scan) ###########
+
+# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting.
+# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI.
+# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter.
+# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below.
+
+  UploadandScan:
+    runs-on: ubuntu-latest
+    needs: Checkoutandbuild
+
+    steps:
+    
+    - name: Obtain war file for upload
+      uses: actions/download-artifact@v3
+      with: 
+       name: verademo.war
+       path: .
+
+    - name: Veracode Upload And Scan
+      uses: veracode/veracode-uploadandscan-action@0.2.6
+      with:
+        appname: ${{ github.repository }}
+        createprofile: true
+        filepath: ./verademo.war
+        version: ${{ github.run_id }}
+        vid: ${{secrets.VERACODE_API_ID}}
+        vkey: ${{secrets.VERACODE_API_KEY}}
+        # createsandbox: optional
+        # sandboxname: optional
+        scantimeout: 30
+        # exclude: optional
+        # include: optional
+        # criticality: optional
+        # pattern: optional
+        # replacement: optional
+        # sandboxid: # optional
+        # scanallnonfataltoplevelmodules: # optional
+        # selected: # optional
+        # selectedpreviously: # optional
+        # teams: # optional
+        # toplevel: # optional
+        deleteincompletescan: 2
+        scanpollinginterval: 120
+        # javawrapperversion: # optional
+        # debug: # optional
+        # includenewmodules: # optional
+      continue-on-error: true
+
+  UploadandScanGetSASTFlaws:
+    runs-on: ubuntu-latest
+    needs: UploadandScan
+    container: 
+      image: veracode/api-signing:latest
+    
+    steps:
+    
+      - name: Get Policy Scan Flaws
+        run: |
+          cd /tmp
+          export VERACODE_API_KEY_ID=${{ secrets.VERACODE_API_ID }}
+          export VERACODE_API_KEY_SECRET=${{ secrets.VERACODE_API_KEY }}
+          guid=$(http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v1/applications?name=${{ github.repository }}" | jq -r '._embedded.applications[0].guid') 
+          echo GUID: ${guid}
+          total_flaws=$(http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True" | jq -r '.page.total_elements')
+          echo TOTAL_FLAWS: ${total_flaws}
+          http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True&size=${total_flaws}" > policy_flaws.json
+
+      - name: Store flaw results file
+        uses: actions/upload-artifact@v3
+        with:
+          name: policy-flaws
+          path: /tmp/policy_flaws.json
+
+  import-policy-flaws:
+    needs: UploadandScanGetSASTFlaws
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    
+    steps:
+    
+      - name: get flaw file
+        uses: actions/download-artifact@v3
+        with:
+          name: policy-flaws
+          path: /tmp
+
+      - name: import SAST flaws as issues
+        uses: veracode/veracode-flaws-to-issues@v2.1.19
+        with:
+          scan-results-json: '/tmp/policy_flaws.json'
+          source-base-path-1: "^com/veracode:src/main/java/com/veracode"
+          source-base-path-2: "^WEB-INF:src/main/webapp/WEB-INF"
+          fail_build: true
+
+########## VERACODE AGENT-BASED SCA ###########
+
+# Scans repository directly, instead of using compiled/packaged artifacts, then imports results into GitHub Issues.
+# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitHub.
+# See https://docs.veracode.com/r/Agent_Based_Scans for more details.
+
+  Agent-basedSCA:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Agent-based SCA dependency scan and results import
+      uses: veracode/veracode-sca@v2.1.9
+      env:
+            SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}
+      with:
+            github_token: ${{ github.token }}
+            # quick: # optional, default is false
+            update_advisor: true
+            # url: # optional, default is 
+            create-issues: true
+            # path: # optional, default is .
+            # debug: # optional, default is false
+            # Run the SRCCLR with the `--skip-collectors` options
+            # skip-collectors: # optional, default is false
+            # allow-dirty: # optional, default is false
+            # recursive: # optional, default is false
+            # skip-vms: # optional, default is false
+            # no-graphs: # optional, default is false
+
+# At present, above action does not output results in build log. If this is required, use OPTIONAL step below instead/in addition. Sourceclear was acquired by Veracode in 2018 and is a trusted domain.
+
+    - name: OPTIONAL Agent-based SCA scan with results in build log
+      env:
+          SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}      
+      run: |
+          curl -sSL https://download.sourceclear.com/ci.sh | sh
+
+  ########## VERACODE CONTAINER SECURITY (IaC, Secrets, SCA Vulnerabilities) ###########
+
+  # VeracodeContainerIaCSecrets:
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+    
+  #   - name: Veracode Container/IaC/Secrets Scanning GitHub Action
+  #     uses: veracode/container_iac_secrets_scanning@v1.0.0
+  #     with:
+  #       vid: ${{secrets.VERACODE_API_ID}}
+  #       vkey: ${{secrets.VERACODE_API_KEY}}
+  #       github-token: ${{ github.token }}
+  #       command: scan
+  #       source: 
+  #       format: json
+  #       type: repo
+  #     # debug: # optional, default is false
+  #     # fail_build: # optional, default is false
