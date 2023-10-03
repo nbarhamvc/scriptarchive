@@ -1,3 +1,4 @@
+# NOTE: THIS EXAMPLE AHS BEEN DEPRECATED IN FAVOUR OF (MOSTLY) ACTIONS DRIVEN YML, SEE PARENT DIRECTORY.
 # YML for use in GitHub pipelines. Note that many scan types are included here (along with multiple methods of submitting scans) as an EXAMPLE.
 # It may not make sense to have all scans run, sequentially or at all, depending on your workflow.
 
