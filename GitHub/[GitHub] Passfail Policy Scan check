@@ -15,51 +15,24 @@ jobs:
           run: |
             curl -O "https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.8.12.0/vosp-api-wrappers-java-23.8.12.0.jar"
 
-        - name: Run JAR File
-          id: run-jar
-          run: |
-                retries=0
-                while [ $retries -lt 5 ]; do
-                output=$(java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github)
-                exit_code=${{ steps.run-jar.outputs.exit_code }}
-                  if [[ $output == *"Did Not Pass"* ]]; then
-                    echo "The JAR output contains 'Did Not Pass'. Failing the workflow."
-                    exit 1
-                  elif [[ $output == *"No report available"* ]]; then
-                    echo "The JAR output contains 'No report available'. Retrying in 120 seconds..."
-                    sleep 120
-                    ((retries++))
-                  else
-                    echo "JAR execution completed successfully."
-                    break
-                  fi
-                done
-        
-        - name: Check Retry Count
-          run: |
-            if [ $retries -eq 5 ]; then
-              echo "Maximum retry count reached. Failing the workflow."
-              exit 1
-            fi
-
 ## Calling Java wrapper, passing API ID and Key secrets, passfail composite action (see https://docs.veracode.com/r/c_wrapper_composite_actions) and the application profile name as it is on the Veracode platform:
 
-#    - name: Pass/Fail Policy check
-#      id: run-command
-#      run: |
-#        java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github
-#      continue-on-error: true
+    - name: Pass/Fail Policy check
+      id: run-command
+      run: |
+        java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github
+      continue-on-error: true
 
 ## NOTE: THE retry@v2 action is not an official Veracode action. It is used here for polling example purposes, should the scan have not completed by the time this step in the pipeline is reached.
 
-#    - name: Pass/Fail Policy check with retries
-#      uses: nick-fields/retry@v2
-#      with:
-#        max_attempts: 5
-#        retry_on: error
-#        retry_wait_seconds: 30
-#        timeout_minutes: 5
-#        command:
-#          java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github
+    - name: Pass/Fail Policy check with retries
+      uses: nick-fields/retry@v2
+      with:
+        max_attempts: 5
+        retry_on: error
+        retry_wait_seconds: 30
+        timeout_minutes: 5
+        command:
+          java -jar vosp-api-wrappers-java-23.8.12.0.jar -vid "${{secrets.VERACODE_API_ID}}" -vkey "${{secrets.VERACODE_API_KEY}}" -action passfail -appname verademo-github
 
 
