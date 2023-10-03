@@ -105,6 +105,8 @@ jobs:
         name: filtered-results
         path: filtered_results.json
 
+# Importing filtered_results.json into GitHub Issues
+
   VeracodePipelineScanResultsImport:
     needs: VeracodePipelineScan
     runs-on: ubuntu-latest
@@ -176,6 +178,8 @@ jobs:
         # debug: # optional
         # includenewmodules: # optional
       continue-on-error: true
+
+# Importing Policy Scan SAST flaws into GitHub Issues
 
   UploadandScanGetSASTFlaws:
     runs-on: ubuntu-latest
