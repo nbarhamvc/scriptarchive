@@ -179,7 +179,7 @@ jobs:
         # includenewmodules: # optional
       continue-on-error: true
 
-# Importing Policy Scan SAST flaws into GitHub Issues
+# Importing Policy Scan SAST flaws into GitHub Issues. Note there is a flaw limit of 500 for importing.
 
   UploadandScanGetSASTFlaws:
     runs-on: ubuntu-latest
