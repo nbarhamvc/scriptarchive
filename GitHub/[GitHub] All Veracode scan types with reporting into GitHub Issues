@@ -221,7 +221,7 @@ jobs:
           path: /tmp
 
       - name: import SAST flaws as issues
-        uses: veracode/veracode-flaws-to-issues@v2.1.19
+        uses: veracode/veracode-flaws-to-issues@v2.1.20
         with:
           scan-results-json: '/tmp/policy_flaws.json'
           source-base-path-1: "^com/veracode:src/main/java/com/veracode"
