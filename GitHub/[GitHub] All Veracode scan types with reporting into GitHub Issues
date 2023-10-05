@@ -3,14 +3,13 @@
 # IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets ${{secrets.VERACODE_API_ID}} and ${{secrets.VERACODE_API_KEY}} 
 # Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation.
 # This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive.
-# The offical Veracode manual for GitHub is accessible at https://github.com/veracode/Veracode-manual-for-GitHub and contains additional options for PR decoration, flow control etc.
 
 ########## PIPELINE TRIGGER ###########
 
-# Pipeline is configured to run manually for demonstration purposes only. Typically would not run all of these scans sequentially, for example may run on Merge Request.
+# Pipeline is configured to run manually for demonstration purposes only. Typically would not run all of these scans sequentially, for example may run on Pull Request.
 # For more assistance with where and when to run these scans, contact your Vercode CSM and they will arrange a resource.
 
-name: Reporting test workflow
+name: All Veracode scans with reporting
 on: workflow_dispatch
 
 jobs:
@@ -72,7 +71,7 @@ jobs:
         file: ./verademo.war
         token: ${{ github.token }}
         # request_policy: # optional
-        fail_on_severity: Very High
+        fail_on_severity: VeryHigh,High
         # fail_on_cwe: # optional
         # baseline_file: # optional
         # policy_name: # optional (note only default policies)
@@ -124,8 +123,11 @@ jobs:
         scan-results-json: filtered_results.json
         github-token: ${{ github.token }}
         # wait-time: # optional, default is 2
-        source-base-path-1: "^com/veracode:src/main/java/com/veracode"
-        source-base-path-2: "^WEB-INF:src/main/webapp/WEB-INF"
+
+# Note: To be able to see code snippets in GitHub Issues, the below paths should be correspond to the location of the source code in your application:
+
+        source_base_path_1: "com/veracode:src/main/java/com/veracode" 
+        source_base_path_2: "WEB-INF:src/main/webapp/WEB-INF"
         # source_base_path_3: # optional
         # fail_build: # optional
         # debug: # optional
@@ -179,7 +181,7 @@ jobs:
         # includenewmodules: # optional
       continue-on-error: true
 
-# Importing Policy Scan SAST flaws into GitHub Issues. Note there is a flaw limit of 500 for importing.
+# Importing Policy Scan SAST flaws into GitHub Issues
 
   UploadandScanGetSASTFlaws:
     runs-on: ubuntu-latest
@@ -199,7 +201,6 @@ jobs:
           total_flaws=$(http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True" | jq -r '.page.total_elements')
           echo TOTAL_FLAWS: ${total_flaws}
           http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True&size=${total_flaws}" > policy_flaws.json
-
       - name: Store flaw results file
         uses: actions/upload-artifact@v3
         with:
@@ -221,11 +222,14 @@ jobs:
           path: /tmp
 
       - name: import SAST flaws as issues
-        uses: veracode/veracode-flaws-to-issues@v2.1.20
+        uses: veracode/veracode-flaws-to-issues@v2.1.19
         with:
           scan-results-json: '/tmp/policy_flaws.json'
-          source-base-path-1: "^com/veracode:src/main/java/com/veracode"
-          source-base-path-2: "^WEB-INF:src/main/webapp/WEB-INF"
+
+# Note: To be able to navigate to source file from GitHub Issue, the below paths should be configured per your application:
+              
+          source_base_path_1: "com/veracode:src/main/java/com/veracode" 
+          source_base_path_2: "WEB-INF:src/main/webapp/WEB-INF"
           fail_build: true
 
 ########## VERACODE AGENT-BASED SCA ###########
@@ -261,14 +265,33 @@ jobs:
             # skip-vms: # optional, default is false
             # no-graphs: # optional, default is false
 
-# At present, above action does not output results in build log. If this is required, use OPTIONAL step below instead/in addition. Sourceclear was acquired by Veracode in 2018 and is a trusted domain.
+# At present, above action does not output results in build log. If this is required, use OPTIONAL step below instead/in addition.
 
     - name: OPTIONAL Agent-based SCA scan with results in build log
       env:
           SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}      
       run: |
           curl -sSL https://download.sourceclear.com/ci.sh | sh
+##### ADDITIONAL OPTIONAL CONFIGURATION ITEMS #####
 
+  ########## AUTO-GENERATE SANDBOX NAME FOR UPLOAD AND SCAN ###########
+
+  # generate-sandbox-name:
+  #   runs-on: [ ubuntu-latest ]
+  #   outputs:
+  #     sandbox-name: ${{ steps.set-sandbox-name.outputs.sandbox-name }}
+  #   steps:
+  #     # Creates the sandbox(logical release descriptive status of current branch)
+  #     - id: set-sandbox-name
+  #       name: set-sandbox-name
+  #       run: |
+  #         echo ${{ github.head_ref }}
+  #         branchName="${{ github.head_ref }}"
+  #         if [[ -z "$branchName" ]]; then
+  #           branchName="${{ github.ref }}"
+  #         fi
+  #         echo "::set-output name=sandbox-name::$branchName"
+  
   ########## VERACODE CONTAINER SECURITY (IaC, Secrets, SCA Vulnerabilities) ###########
 
   # VeracodeContainerIaCSecrets:
@@ -283,7 +306,7 @@ jobs:
   #       vkey: ${{secrets.VERACODE_API_KEY}}
   #       github-token: ${{ github.token }}
   #       command: scan
-  #       source: 
+  #       source: https://github.com/bridgecrewio/terragoat
   #       format: json
   #       type: repo
   #     # debug: # optional, default is false
