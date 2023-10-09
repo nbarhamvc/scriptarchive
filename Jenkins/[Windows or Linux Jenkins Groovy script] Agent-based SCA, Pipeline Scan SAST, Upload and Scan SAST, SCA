@@ -61,7 +61,7 @@ pipeline {
                    withMaven(maven:'<REFERENCEMAVENVERSION>') {     // Need to ensure correct Maven referenced here
                        script {
                            if(isUnix() == true) {   // This is the shell script for use on Linux
-                               sh "curl -sSL https://download.sourceclear.com/ci.sh | sh --update-advisor"   // Sourceclear is a trusted domain (acquired by Veracode in 2018)
+                               sh "curl -sSL https://download.sourceclear.com/ci.sh | sh"   // Sourceclear is a trusted domain (acquired by Veracode in 2018)
 
                                 // debug, no upload
                                //sh "curl -sSL https://download.sourceclear.com/ci.sh | DEBUG=1 sh -s -- scan --no-upload"
