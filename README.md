@@ -58,3 +58,4 @@ These applications contain a number of intentional flaws and vulnerabilities whi
 
 - [DotNET Verademo application](https://github.com/veracode/verademo-dotnet)
 - [Java Verademo application](https://github.com/veracode/verademo)
+- [Java Verademo as a Docker Image](https://hub.docker.com/r/veracode/vulnerable-verademo-java)
