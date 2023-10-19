@@ -124,7 +124,7 @@ jobs:
         github-token: ${{ github.token }}
         # wait-time: # optional, default is 2
 
-# Note: To be able to see code snippets in GitHub Issues, the below paths should be correspond to the location of the source code in your application:
+# # Note: To be able to see code snippets in GitHub Issues, the below paths should be correspond to the location of the source code in your application:
 
         source_base_path_1: "com/veracode:src/main/java/com/veracode" 
         source_base_path_2: "WEB-INF:src/main/webapp/WEB-INF"
@@ -200,7 +200,8 @@ jobs:
           echo GUID: ${guid}
           total_flaws=$(http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True" | jq -r '.page.total_elements')
           echo TOTAL_FLAWS: ${total_flaws}
-          http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True&size=${total_flaws}" > policy_flaws.json
+          http --auth-type veracode_hmac GET "https://api.veracode.com/appsec/v2/applications/${guid}/findings?scan_type=STATIC&violates_policy=True" > policy_flaws.json
+
       - name: Store flaw results file
         uses: actions/upload-artifact@v3
         with:
@@ -209,25 +210,21 @@ jobs:
 
   import-policy-flaws:
     needs: UploadandScanGetSASTFlaws
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    
+    runs-on: ubuntu-latest 
     steps:
     
       - name: get flaw file
         uses: actions/download-artifact@v3
         with:
           name: policy-flaws
-          path: /tmp
 
       - name: import SAST flaws as issues
-        uses: veracode/veracode-flaws-to-issues@v2.1.19
+        uses: veracode/veracode-flaws-to-issues@v2.1.20
         with:
-          scan-results-json: '/tmp/policy_flaws.json'
+          scan-results-json: policy_flaws.json
+          github-token: ${{ github.token }}
 
-# Note: To be able to navigate to source file from GitHub Issue, the below paths should be configured per your application:
-              
+# # Note: To be able to navigate to source file from GitHub Issue, the below paths should be configured per your application:
           source_base_path_1: "com/veracode:src/main/java/com/veracode" 
           source_base_path_2: "WEB-INF:src/main/webapp/WEB-INF"
           fail_build: true
@@ -272,6 +269,9 @@ jobs:
           SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}      
       run: |
           curl -sSL https://download.sourceclear.com/ci.sh | sh
+
+
+
 ##### ADDITIONAL OPTIONAL CONFIGURATION ITEMS #####
 
   ########## AUTO-GENERATE SANDBOX NAME FOR UPLOAD AND SCAN ###########
@@ -294,20 +294,20 @@ jobs:
   
   ########## VERACODE CONTAINER SECURITY (IaC, Secrets, SCA Vulnerabilities) ###########
 
-  # VeracodeContainerIaCSecrets:
-  #   runs-on: ubuntu-latest
+  VeracodeContainerIaCSecrets:
+    runs-on: ubuntu-latest
 
-  #   steps:
+    steps:
     
-  #   - name: Veracode Container/IaC/Secrets Scanning GitHub Action
-  #     uses: veracode/container_iac_secrets_scanning@v1.0.0
-  #     with:
-  #       vid: ${{secrets.VERACODE_API_ID}}
-  #       vkey: ${{secrets.VERACODE_API_KEY}}
-  #       github-token: ${{ github.token }}
-  #       command: scan
-  #       source: https://github.com/bridgecrewio/terragoat
-  #       format: json
-  #       type: repo
-  #     # debug: # optional, default is false
-  #     # fail_build: # optional, default is false
+    - name: Veracode Container/IaC/Secrets Scanning GitHub Action
+      uses: veracode/container_iac_secrets_scanning@v1.0.0
+      with:
+        vid: ${{secrets.VERACODE_API_ID}}
+        vkey: ${{secrets.VERACODE_API_KEY}}
+        github-token: ${{ github.token }}
+        command: scan
+        source: https://github.com/bridgecrewio/terragoat
+        format: json
+        type: repo
+      # debug: # optional, default is false
+      # fail_build: # optional, default is false
