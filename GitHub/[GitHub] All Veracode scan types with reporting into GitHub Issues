@@ -64,7 +64,7 @@ jobs:
        path: .
     
     - name: Veracode Pipeline-Scan
-      uses: veracode/Veracode-pipeline-scan-action@v1.0.9
+      uses: veracode/Veracode-pipeline-scan-action@v1.0.10
       with:
         vid: ${{secrets.VERACODE_API_ID}}
         vkey: ${{secrets.VERACODE_API_KEY}}
