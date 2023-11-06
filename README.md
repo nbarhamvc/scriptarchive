@@ -56,6 +56,5 @@ The below figure shows an example of *_potential_* use of scan types as part of 
 
 These applications contain a number of intentional flaws and vulnerabilities which can be used to test different Veracode scan types in pipelines:
 
-- [DotNET Verademo application](https://github.com/veracode/verademo-dotnet)
-- [Java Verademo application](https://github.com/veracode/verademo)
-- [Java Verademo as a Docker Image](https://hub.docker.com/r/veracode/vulnerable-verademo-java)
+- [DotNET Verademo application](https://github.com/veracode-demo-labs/verademo-dotnetcore) or as a [Docker Image](https://hub.docker.com/r/veracode/vulnerable-verademo-dotnet)
+- [Java Verademo application](https://github.com/veracode/verademo) or as a [Docker Image](https://hub.docker.com/r/veracode/vulnerable-verademo-java)
