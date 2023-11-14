@@ -78,49 +78,49 @@ steps:
 
 # Tasks to generate XML and HTML reports using an unofficial, unsupported community script, then publishing them as artifacts. Use at your org's discretion.
 
-- task: CmdLine@2
-  displayName: Optional save results as HTML And XML
-  inputs:
-    script: |
-      echo Saving results as xml and html
-      curl -sSO https://raw.githubusercontent.com/cadonuno/pipeline2detailedreport/master/detailedreport.py 
-      python detailedreport.py --html
-      python detailedreport.py --html --html_name "pipeline-report-filtered.html" --xml_name "detailed_report_filtered.xml" -f filtered_results.json
-      echo Finished saving results
-  condition:
-      succeededOrFailed()
+# - task: CmdLine@2
+#   displayName: Optional save results as HTML And XML
+#   inputs:
+#     script: |
+#       echo Saving results as xml and html
+#       curl -sSO https://raw.githubusercontent.com/cadonuno/pipeline2detailedreport/master/detailedreport.py 
+#       python detailedreport.py --html
+#       python detailedreport.py --html --html_name "pipeline-report-filtered.html" --xml_name "detailed_report_filtered.xml" -f filtered_results.json
+#       echo Finished saving results
+#   condition:
+#       succeededOrFailed()
 
-- task: PublishBuildArtifacts@1
-  displayName: Optional publish artifact 1
-  condition:
-      succeededOrFailed()
-  inputs:
-    pathToPublish: 'pipeline-report.html'
-    artifactName: pipeline-result
+# - task: PublishBuildArtifacts@1
+#   displayName: Optional publish artifact 1
+#   condition:
+#       succeededOrFailed()
+#   inputs:
+#     pathToPublish: 'pipeline-report.html'
+#     artifactName: pipeline-result
 
-- task: PublishBuildArtifacts@1
-  displayName: Optional publish artifact 2
-  condition:
-    succeededOrFailed()
-  inputs:
-    pathToPublish: 'pipeline-report-filtered.html'
-    artifactName: pipeline-result
+# - task: PublishBuildArtifacts@1
+#   displayName: Optional publish artifact 2
+#   condition:
+#     succeededOrFailed()
+#   inputs:
+#     pathToPublish: 'pipeline-report-filtered.html'
+#     artifactName: pipeline-result
 
-- task: PublishBuildArtifacts@1
-  displayName: Optional publish artifact 3
-  condition:
-    succeededOrFailed()
-  inputs:
-    pathToPublish: 'detailed_report.xml'
-    artifactName: pipeline-result
+# - task: PublishBuildArtifacts@1
+#   displayName: Optional publish artifact 3
+#   condition:
+#     succeededOrFailed()
+#   inputs:
+#     pathToPublish: 'detailed_report.xml'
+#     artifactName: pipeline-result
 
-- task: PublishBuildArtifacts@1
-  displayName: Optional publish artifact 4
-  condition:
-    succeededOrFailed()
-  inputs:
-    pathToPublish: 'detailed_report_filtered.xml'
-    artifactName: pipeline-result
+# - task: PublishBuildArtifacts@1
+#   displayName: Optional publish artifact 4
+#   condition:
+#     succeededOrFailed()
+#   inputs:
+#     pathToPublish: 'detailed_report_filtered.xml'
+#     artifactName: pipeline-result
 
 # Agent-based SCA scan submission. Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
 # Sourceclear was acquired by Veracode in 2018 - this is a trusted domain. The script will download the agent, run it for the purposes of scan, then delete it. 
