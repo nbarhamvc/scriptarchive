@@ -1,3 +1,7 @@
+# Download latest Veracode Java wrapper from Maven central. This will be used to submit an API call to the platform to verify whether app is passing Policy or not.
+# Call wrapper and pass it Veracode API ID & Key, then 'passfail' action, along with Veracode application profile name as it appears in Veracode UI or as defined by your pipeline.
+# Result is then output to txt file and searched for "Did Not Pass" string, returning exit/error code of 1 if so. 
+
 trigger:
 - main
 
@@ -11,16 +15,9 @@ steps:
     targetType: 'inline'
     script: |
       invoke-Command {
-
-# Download latest Veracode Java wrapper from Maven central. This will be used to submit an API call to the platform to verify whether app is passing Policy or not.
-
       Write-Output 'Download Maven JAR'
       Invoke-WebRequest -Uri https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.8.12.0/vosp-api-wrappers-java-23.8.12.0.jar -OutFile ./vosp-api-wrappers-java-23.8.12.0.jar
-
-# Call wrapper and pass it Veracode API ID & Key, then 'passfail' action, along with Veracode application profile name as it appears in Veracode UI or as defined by your pipeline.
-# Result is then output to txt file and searched for "Did Not Pass" string, returning exit/error code of 1 if so. 
-
-      java -jar ./vosp-api-wrappers-java-23.8.12.0.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -action passfail -appname $APPLICATIONPROFILENAME > ./output.txt
+      java -jar ./vosp-api-wrappers-java-23.8.12.0.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -action passfail -appname azure-java > ./output.txt
       $outputFile = "./output.txt"
       $outputContent = Get-Content -Path $outputFile -Raw
       if ($outputContent -like "*Did Not Pass*") {
