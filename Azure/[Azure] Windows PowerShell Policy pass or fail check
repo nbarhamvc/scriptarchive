@@ -15,17 +15,24 @@ steps:
     targetType: 'inline'
     script: |
       invoke-Command {
-      Write-Output 'Download Maven JAR'
+      Write-Output 'Download Veracode wrapper .jar from Maven'
       Invoke-WebRequest -Uri https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.8.12.0/vosp-api-wrappers-java-23.8.12.0.jar -OutFile ./vosp-api-wrappers-java-23.8.12.0.jar
-      java -jar ./vosp-api-wrappers-java-23.8.12.0.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -action passfail -appname azure-java > ./output.txt
+      Write-Output 'Download complete'
+      Write-Output 'Submit API call for application profile and store results in output.txt'      
+      java -jar ./vosp-api-wrappers-java-23.8.12.0.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -action passfail -appname $YOURAPPLICATIONPROFILENAMEONVERACODEPLATFORM > ./output.txt
+      Write-Output 'API response received, examining output.txt for non-pass strings'
       $outputFile = "./output.txt"
       $outputContent = Get-Content -Path $outputFile -Raw
       if ($outputContent -like "*Did Not Pass*") {
-        Write-Host "Error: 'Did Not Pass' found in output."
+        Write-Host "Policy Failed: 'Did Not Pass' found in response. Check Scan on platform."
+        exit 1
+        }
+      elseif ($null -eq $outputContent) {
+        Write-Host "Error: No report available. Check Scan on platform"
         exit 1
         }
       else {
-        Write-Host "'Did Not Pass' not found in output."
+        Write-Host "Success: 'Did Not Pass' or 'Report not available' not found in response."
         exit 0
         }
       }
