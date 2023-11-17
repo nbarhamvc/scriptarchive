@@ -1,0 +1,29 @@
+# Following will generate an SBOM based on Application Profile GUID and store it as an artifact. Edit name on line 17 accordingly to correspond with app profile name.
+# Needs VERAC
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      pip install veracode-api-signing
+      echo "Finished pip install"
+      export name=$YOURAPPPROFILENAMEONVERACODEPLATFORM
+      mkdir ~/.veracode
+      echo "Successfully created directory"
+      printf "[default]\nveracode_api_key_id = $(VERACODE_API_ID)\nveracode_api_key_secret = $(VERACODE_API_KEY)" > ~/.veracode/credentials
+      echo "Wrote credentials to file successfully"
+      http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./getguid.json https://api.veracode.com/appsec/v1/applications?name=$name
+      echo "Call for GUID done"
+      export appguid=$(cat getguid.json | jq -r '._embedded.applications[0].guid')
+      echo "GUID export complete"
+      http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./"$(Build.Repository.Name).json" https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/cyclonedx?type=application
+      echo "SBOM successfully written to "$(Build.Repository.Name).json" file"
+- publish: $(System.DefaultWorkingDirectory)/$(Build.Repository.Name).json
