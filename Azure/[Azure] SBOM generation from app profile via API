@@ -1,5 +1,5 @@
 # Following will generate an SBOM based on Application Profile GUID and store it as an artifact. Edit name on line 17 accordingly to correspond with app profile name.
-# Needs VERAC
+# Needs VERACODE API ID & KEY stored as credentials
 
 trigger:
 - main
