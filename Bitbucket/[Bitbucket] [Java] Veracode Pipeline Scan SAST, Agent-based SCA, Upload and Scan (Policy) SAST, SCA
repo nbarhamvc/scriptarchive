@@ -48,4 +48,4 @@ pipelines:
           name: Veracode Upload and Scan SAST, SCA (Policy/Sandbox)
           image: veracode/api-wrapper-java
           script:
-            - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -action UploadAndScan -appname "<INSERTAPPNAMEONVERACODEPLATFORM" -createprofile true -autoscan true -filepath <INSERTFILEFORSCANNING> -version 1 -scantimeout 30
+            - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -action UploadAndScan -appname "<INSERTAPPNAMEONVERACODEPLATFORM" -createprofile true -autoscan true -filepath <INSERTFILEFORSCANNING> -version $BITBUCKET_BUILD_NUMBER -scantimeout 30
