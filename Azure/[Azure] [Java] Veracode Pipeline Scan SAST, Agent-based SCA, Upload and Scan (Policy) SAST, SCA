@@ -111,6 +111,7 @@ steps:
 # Takes artifact built earlier and uploads to Veracode platform for scanning.
 # If no sandbox parameter  is specified, Policy Scan will take place.
 # Avoid exposing credentials in pipeline - endpoint connection is used here.
+# See optional arguments that can be passed here: https://docs.veracode.com/r/Azure_DevOps_YAML_Properties_for_Upload_and_Scan
 
 - task: Veracode@3
   displayName: Upload and Scan SAST, SCA
