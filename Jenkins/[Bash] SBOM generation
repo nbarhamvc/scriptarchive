@@ -3,7 +3,7 @@
 // pip package manager is installed
 // veracode-api-signing is installed from pip (https://docs.veracode.com/r/t_install_api_authen)
 // httpie, jquery
-// valid credentials in local credentials file - https://docs.veracode.com/r/c_configure_api_cred_file. The 'withCredentials' on line 14 below makes use of the Jenkins credentials binding plugin to securely pass secrets, your process may differ.
+// valid credentials in local credentials file - https://docs.veracode.com/r/c_configure_api_cred_file. The 'withCredentials' on line 14 below makes use of the Jenkins credentials binding plugin to securely pass secrets to line 18, your secrets process may differ.
 // If assistance needed please contact your Veracode CSE.
 
 pipeline {
