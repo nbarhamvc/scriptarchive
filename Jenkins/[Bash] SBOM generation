@@ -1,5 +1,10 @@
-// Pre-requisites - Python, Pip, veracode-api-signing, httpie, jq, valid credentials in local credentials file
-// If assistance needed please contact Veracode CSE
+// Pre-requisites required to make API calls via Jenkins: 
+// Python 3.7 (or later)
+// pip package manager is installed
+// veracode-api-signing is installed from pip (https://docs.veracode.com/r/t_install_api_authen)
+// httpie, jquery
+// valid credentials in local credentials file - https://docs.veracode.com/r/c_configure_api_cred_file
+// If assistance needed please contact your Veracode CSE.
 
 pipeline {
     agent any
@@ -7,17 +12,17 @@ pipeline {
         stage('test') {
             steps {
          sh '''#!/bin/bash
-            http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./getguid.json "https://api.veracode.com/appsec/v1/applications?name=azure-java"
+            http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./getguid.json "https://api.veracode.com/appsec/v1/applications?name=$YOURAPPPROFILENAMEONVERACODEPLATFORM"
             export appguid=$(cat ./getguid.json | jq -r '._embedded.applications[0].guid')
             echo "Obtained app guid to generate SBOM"
-            http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./SBOM.json "https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/cyclonedx?type=application"
+            http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./$YOURSCANNAME-SBOM.json "https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/spdx?type=application"
           '''
     }
     }
 }
      post {
         always {
-            archiveArtifacts artifacts: 'SBOM.json', fingerprint: true
+            archiveArtifacts artifacts: '$YOURSCANNAME-SBOM.json', fingerprint: true
         }
      }
     }
