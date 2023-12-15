@@ -124,7 +124,8 @@ steps:
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
     failBuildOnPolicyFail: true
-    maximumWaitTime: '30'
+    optargs: '-deleteincompletescan 1, -scanpollinginterval 60'
+    maximumWaitTime: '90'
   continueOnError: true
     
 # Configurable task, to import results into Azure boards as work items.
