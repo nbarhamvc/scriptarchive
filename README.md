@@ -36,15 +36,15 @@ This is an unofficial collection of scripts and pipeline configuration files tha
 
 There are a number of methods which can be used to submit scans, dependent on environment and preference. Whichever delivery method is chosen, the result will be the same. 
 
-- API wrappers - Veracode's Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers). Please be aware that some of the files/scripts in this repo will only work on either Linux or Windows environments.
+- Manual upload - You can use the web interface to manually conduct all scan types, with the exception of Agent-based SCA. We recommend you package and submit a scan manually first, to verify the uploaded artifact has no errors and the scope of the scan is correct before proceeding.
 
 - Plugins, Actions, Tasks - dependent on CI tool, these abstract the wrappers from the user to make configuration easier. Search the relevant marketplace to see Veracode official artifacts.
 
 - Certified Docker images - containing wrappers for use in CI pipelines. [See this link to the images](https://hub.docker.com/u/veracode).
 
-- Manual upload - You can use the web interface to manually conduct all scan types, with the exception of Agent-based SCA - useful as a fall-back in case pipelines stop working.
-
 - Veracode CLI - tool invoked from the command line which can perform a variety of functions from SBOM generation to container image SCA results generation.
+
+- API wrappers - Veracode's Java/C# wrappers can be used to submit scans from any command line/shell/bash environment, along with API querying/automation. [See this link for more information](https://docs.veracode.com/r/c_about_wrappers). Please be aware that some of the files/scripts in this repo will only work on either Linux or Windows environments.
 
 # Example of how scan types *could* be integrated
 
