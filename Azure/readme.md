@@ -1,1 +1,1 @@
-Previously shared YML templates have been moved into the 'Archive' sub-directory.
+Note: previously shared YML templates have been moved into the 'Archive' sub-directory.
