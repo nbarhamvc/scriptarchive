@@ -1,0 +1,98 @@
+### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! See docs.veracode.com ###
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
+# Reference packaging guidance for your language/framework        #
+
+steps:
+- task: Maven@3
+  displayName: Maven Build of Vuln App
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: false
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+
+### VERACODE PIPELINE SCAN SAST ###
+#  Set API ID & Key as variables  #
+
+- task: Bash@3
+  displayName: Veracode Pipeline Scan SAST
+  inputs:
+    targetType: 'inline'
+    script: |
+      curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+      unzip -o pipeline-scan-LATEST.zip
+      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourartifact(s)toupload} || true 
+
+### VERACODE AGENT-BASED SCA ###
+# Generate API token via web UI#
+
+- task: CmdLine@2
+  displayName: Veracode Agent-based SCA
+  env:
+    SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+  inputs:
+    script: 'curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty'
+
+### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+# Install from Azure marketplace, create service connection, configure #
+
+- task: Veracode@3
+  displayName: Veracode Upload and Scan SAST, SCA
+  inputs:
+    ConnectionDetailsSelection: 'Service Connection'
+    AnalysisService: 'Veracode Platform'
+    veracodeAppProfile: '$(system.teamProject)'
+    version: '$(build.buildNumber)'
+    filepath: '$(System.DefaultWorkingDirectory)/target/verademo.war'
+    createProfile: true
+    failBuildIfUploadAndScanBuildStepFails: true
+    importResults: true
+    failBuildOnPolicyFail: true
+    optargs: '-deleteincompletescan 1, -scanpollinginterval 60'
+    maximumWaitTime: '90'
+  continueOnError: true
+
+### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
+# Optional import to Azure Boards as work items                        #
+
+- task: Veracode Flaw Importer@3
+  displayName: Import Upload and Scan findings to Boards
+  inputs:
+    ConnectionDetailsSelection: 'Service Connection'
+    AnalysisService: 'Veracode Platform'
+    veracodeAppProfile: '$(system.teamProject)'
+    sandboxName: 
+    scanType: 'Static, SCA'
+    importType: 'All Unmitigated Flaws Violating Policy'
+    workItemType: 'Bug'
+    area: '$(system.teamProject)'
+    overwriteAreaPathInWorkItemsOnImport: true
+    iterationPath: '$(system.teamProject)'
+    overwriteIterationPath: true
+    flawImportLimit: '1000'
+
+### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
+# Target images, repos, directories, archives    #
+
+- task: Bash@3
+  displayName: Veracode Container Security IaC, SCA
+  inputs:
+    targetType: inline
+    script: |
+      pwd
+      export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
+      export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
+      curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+      ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./vulntable.json
+      cat ./vulntable.json
