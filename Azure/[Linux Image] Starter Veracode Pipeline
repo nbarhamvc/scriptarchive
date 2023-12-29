@@ -1,4 +1,4 @@
-### NOTE: THIS IS A VERY BASIC VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES ONLY. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE OR SEE DOCS.VERACODE.COM ###
+### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM ###
 
 trigger:
 - none
@@ -32,8 +32,15 @@ steps:
     script: |
       curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
       unzip -o pipeline-scan-LATEST.zip
-      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourfiletouploadforscanning} || true 
+      java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourpackagedfiletouploadforscanning}
   continueOnError: true
+
+- task: PublishPipelineArtifact@1
+  displayName: Store scan results as artifact
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/results.json'
+    artifact: 'Pipeline Scan JSON results'
+    publishLocation: 'pipeline'
 
 ### VERACODE AGENT-BASED SCA ###
 # Generate API token via web UI#
@@ -43,7 +50,17 @@ steps:
   env:
     SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
   inputs:
-    script: 'curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty'
+    script: |
+      curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty > AgentSCA.txt
+      cat AgentSCA.txt
+  continueOnError: true
+
+- task: PublishPipelineArtifact@1
+  displayName: Store scan results as artifact
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/AgentSCA.txt'
+    artifact: 'Agent SCA results'
+    publishLocation: 'pipeline'
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 # Install from Azure marketplace, create service connection, configure #
@@ -55,7 +72,7 @@ steps:
     AnalysisService: 'Veracode Platform'
     veracodeAppProfile: '$(system.teamProject)'
     version: '$(build.buildNumber)'
-    filepath: '{yourfiletouploadforscanning}'
+    filepath: '{yourpackagedfiletouploadforscanning}'
     createProfile: true
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
@@ -95,5 +112,13 @@ steps:
       export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
       export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
       curl -fsS https://tools.veracode.com/veracode-cli/install | sh
-      ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./vulntable.json
-      cat ./vulntable.json
+      ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.json
+      cat ./containerresults.json
+  continueOnError: true
+
+- task: PublishPipelineArtifact@1
+  displayName: Store scan results as artifact
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/containerresults.json'
+    artifact: 'Container Security results'
+    publishLocation: 'pipeline'
