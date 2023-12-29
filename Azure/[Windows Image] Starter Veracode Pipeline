@@ -1,4 +1,4 @@
-### NOTE: THIS IS A VERY BASIC VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES ONLY. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE OR SEE DOCS.VERACODE.COM ###
+### NOTE: THIS IS A VERY BASIC VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES ONLY. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSE/CSM OR SEE DOCS.VERACODE.COM ###
 
 trigger:
 - none
@@ -45,10 +45,16 @@ steps:
       Write-Output 'Unzip PipelineScanner'
       Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
       Write-Output 'Run Pipeline Scanner'
-      java -jar .\pipeline-scanner-java-LATEST\pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourfiletobescannedwithveracode}
+      java -jar .\pipeline-scanner-java-LATEST\pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourpackagedfiletouploadforscanning}
       }
   continueOnError: true
-- publish: $(System.DefaultWorkingDirectory)/results.json
+
+- task: PublishPipelineArtifact@1
+  displayName: Store scan results as artifact
+  inputs:
+    targetPath: 'results.json'
+    artifact: 'Pipeline Scan JSON results'
+    publishLocation: 'pipeline'
 
 ### VERACODE AGENT-BASED SCA ###
 # Generate API token via web UI#
@@ -61,12 +67,13 @@ steps:
       Set-ExecutionPolicy AllSigned -Scope Process -Force
       $ProgressPreference = 'SilentlyContinue'
          iex ((New-Object System.Net.WebClient).DownloadString('https://download.srcclr.com/ci.ps1')); srcclr scan --allow-dirty --update-advisor
-  continueOnError: false
+  continueOnError: true
   env:
     SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 # Install from Azure marketplace, create service connection, configure #
+# Note: changing 'createProfile' to true will consume an app license   #
 
 - task: Veracode@3
   displayName: Veracode Upload and Scan SAST, SCA
@@ -75,8 +82,8 @@ steps:
     AnalysisService: 'Veracode Platform'
     veracodeAppProfile: '$(system.teamProject)'
     version: '$(build.buildNumber)'
-    filepath: '{yourfiletobescannedwithveracode}'
-    createProfile: true
+    filepath: '{yourpackagedfiletouploadforscanning}'
+    createProfile: false
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
     failBuildOnPolicyFail: true
