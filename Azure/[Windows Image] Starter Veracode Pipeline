@@ -1,4 +1,4 @@
-### NOTE: THIS IS A VERY BASIC VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES ONLY. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSE/CSM OR SEE DOCS.VERACODE.COM ###
+### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM ###
 
 trigger:
 - none
@@ -7,7 +7,7 @@ pool:
   vmImage: 'windows-latest'
 
 ### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
-# Reference packaging guidance for your language/framework        #
+# Reference packaging guidance for your language/framework at https://docs.veracode.com/cheatsheet #
 
 variables:
   solution: '**/*.sln'
@@ -32,7 +32,7 @@ steps:
     configuration: '$(buildConfiguration)'
 
 ### VERACODE PIPELINE SCAN SAST ###
-#  Set API ID & Key as variables  #
+#  Set API ID & Key as variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
 
 - task: PowerShell@2
   displayName: Veracode Pipeline Scan SAST 
@@ -57,7 +57,7 @@ steps:
     publishLocation: 'pipeline'
 
 ### VERACODE AGENT-BASED SCA ###
-# Generate API token via web UI#
+# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
 
 - task: PowerShell@2
   displayName: Agent-based SCA
@@ -72,8 +72,8 @@ steps:
     SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
-# Install from Azure marketplace, create service connection, configure #
-# Note: changing 'createProfile' to true will consume an app license   #
+# Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
+# Note: changing 'createProfile' to true will consume an app license #
 
 - task: Veracode@3
   displayName: Veracode Upload and Scan SAST, SCA
@@ -92,7 +92,7 @@ steps:
   continueOnError: true
 
 ### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
-# Optional import to Azure Boards as work items                        #
+# Optional import to Azure Boards as work items, configure using https://docs.veracode.com/r/t_importflaws #
 
 - task: Veracode Flaw Importer@3
   displayName: Import Upload and Scan findings to Boards
