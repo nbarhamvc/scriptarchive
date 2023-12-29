@@ -64,6 +64,7 @@ steps:
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 # Install from Azure marketplace, create service connection, configure #
+# Note: changing 'createProfile' to true will consume an app license   #
 
 - task: Veracode@3
   displayName: Veracode Upload and Scan SAST, SCA
@@ -73,7 +74,7 @@ steps:
     veracodeAppProfile: '$(system.teamProject)'
     version: '$(build.buildNumber)'
     filepath: '{yourpackagedfiletouploadforscanning}'
-    createProfile: true
+    createProfile: false
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
     failBuildOnPolicyFail: true
