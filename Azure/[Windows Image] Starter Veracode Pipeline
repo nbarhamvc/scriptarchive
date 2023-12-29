@@ -45,9 +45,10 @@ steps:
       Write-Output 'Unzip PipelineScanner'
       Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
       Write-Output 'Run Pipeline Scanner'
-      java -jar .\pipeline-scanner-java-LATEST\pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(build.artifactStagingDirectory)\verademo-dotnet.zip
+      java -jar .\pipeline-scanner-java-LATEST\pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourfiletobescannedwithveracode}
       }
   continueOnError: true
+- publish: $(System.DefaultWorkingDirectory)/results.json
 
 ### VERACODE AGENT-BASED SCA ###
 # Generate API token via web UI#
@@ -74,7 +75,7 @@ steps:
     AnalysisService: 'Veracode Platform'
     veracodeAppProfile: '$(system.teamProject)'
     version: '$(build.buildNumber)'
-    filepath: '$(build.artifactStagingDirectory)\verademo-dotnet.zip'
+    filepath: '{yourfiletobescannedwithveracode}'
     createProfile: true
     failBuildIfUploadAndScanBuildStepFails: true
     importResults: true
