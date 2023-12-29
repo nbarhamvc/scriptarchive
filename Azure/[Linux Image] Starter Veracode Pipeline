@@ -7,7 +7,7 @@ pool:
   vmImage: ubuntu-latest
 
 ### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
-# Reference packaging guidance for your language/framework        #
+# Reference packaging guidance for your language/framework at https://docs.veracode.com/cheatsheet #
 
 steps:
 - task: Maven@3
@@ -23,7 +23,7 @@ steps:
     goals: 'package'
 
 ### VERACODE PIPELINE SCAN SAST ###
-#  Set API ID & Key as variables  #
+#  Set API ID & Key as variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
 
 - task: Bash@3
   displayName: Veracode Pipeline Scan SAST
@@ -43,7 +43,7 @@ steps:
     publishLocation: 'pipeline'
 
 ### VERACODE AGENT-BASED SCA ###
-# Generate API token via web UI#
+# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
 
 - task: CmdLine@2
   displayName: Veracode Agent-based SCA
@@ -55,8 +55,8 @@ steps:
   continueOnError: true
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
-# Install from Azure marketplace, create service connection, configure #
-# Note: changing 'createProfile' to true will consume an app license   #
+# Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
+# Note: changing 'createProfile' to true will consume an app license #
 
 - task: Veracode@3
   displayName: Veracode Upload and Scan SAST, SCA
@@ -75,7 +75,7 @@ steps:
   continueOnError: true
 
 ### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
-# Optional import to Azure Boards as work items                        #
+# Optional import to Azure Boards as work items, configure using https://docs.veracode.com/r/t_importflaws #
 
 - task: Veracode Flaw Importer@3
   displayName: Import Upload and Scan findings to Boards
@@ -94,7 +94,7 @@ steps:
     flawImportLimit: '1000'
 
 ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
-# Target images, repos, directories, archives    #
+# Target images, repos, directories, archives, configure using https://docs.veracode.com/r/Scan_with_Veracode_Container_Security #
 
 - task: Bash@3
   displayName: Veracode Container Security IaC, SCA
