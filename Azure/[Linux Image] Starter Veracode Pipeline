@@ -51,16 +51,8 @@ steps:
     SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
   inputs:
     script: |
-      curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty > AgentSCA.txt
-      cat AgentSCA.txt
+      curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty
   continueOnError: true
-
-- task: PublishPipelineArtifact@1
-  displayName: Store scan results as artifact
-  inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/AgentSCA.txt'
-    artifact: 'Agent SCA results'
-    publishLocation: 'pipeline'
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 # Install from Azure marketplace, create service connection, configure #
