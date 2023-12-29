@@ -1,0 +1,103 @@
+### NOTE: THIS IS A VERY BASIC VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES ONLY. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK ME OR SEE DOCS.VERACODE.COM ###
+
+trigger:
+- none
+
+pool:
+  vmImage: 'windows-latest'
+
+### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
+# Reference packaging guidance for your language/framework        #
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Debug'
+
+steps:
+- task: NuGetToolInstaller@1
+  displayName: Install NuGetTool
+
+- task: NuGetCommand@2
+  displayName: Restore solution
+  inputs:
+    restoreSolution: '$(solution)'
+
+- task: VSBuild@1
+  displayName: Debug build with Visual Studio
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+### VERACODE PIPELINE SCAN SAST ###
+#  Set API ID & Key as variables  #
+
+- task: PowerShell@2
+  displayName: Veracode Pipeline Scan SAST 
+  inputs:
+    targetType: 'inline'
+    script: |
+      invoke-Command {
+      Write-Output 'Download PipelineScanner'
+      (New-Object System.Net.WebClient).DownloadFile('https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip', '.\pipeline-scanner-java-LATEST.zip')
+      Write-Output 'Unzip PipelineScanner'
+      Expand-Archive -force .\pipeline-scanner-java-LATEST.zip
+      Write-Output 'Run Pipeline Scanner'
+      java -jar .\pipeline-scanner-java-LATEST\pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(build.artifactStagingDirectory)\verademo-dotnet.zip
+      }
+  continueOnError: true
+
+### VERACODE AGENT-BASED SCA ###
+# Generate API token via web UI#
+
+- task: PowerShell@2
+  displayName: Agent-based SCA
+  inputs:
+    targetType: 'inline'
+    script: |
+      Set-ExecutionPolicy AllSigned -Scope Process -Force
+      $ProgressPreference = 'SilentlyContinue'
+         iex ((New-Object System.Net.WebClient).DownloadString('https://download.srcclr.com/ci.ps1')); srcclr scan --allow-dirty --update-advisor
+  continueOnError: false
+  env:
+    SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+
+### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+# Install from Azure marketplace, create service connection, configure #
+
+- task: Veracode@3
+  displayName: Veracode Upload and Scan SAST, SCA
+  inputs:
+    ConnectionDetailsSelection: 'Service Connection'
+    AnalysisService: 'Veracode Platform'
+    veracodeAppProfile: '$(system.teamProject)'
+    version: '$(build.buildNumber)'
+    filepath: '$(build.artifactStagingDirectory)\verademo-dotnet.zip'
+    createProfile: true
+    failBuildIfUploadAndScanBuildStepFails: true
+    importResults: true
+    failBuildOnPolicyFail: true
+    optargs: '-deleteincompletescan 1, -scanpollinginterval 60'
+    maximumWaitTime: '90'
+  continueOnError: true
+
+### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
+# Optional import to Azure Boards as work items                        #
+
+- task: Veracode Flaw Importer@3
+  displayName: Import Upload and Scan findings to Boards
+  inputs:
+    ConnectionDetailsSelection: 'Service Connection'
+    AnalysisService: 'Veracode Platform'
+    veracodeAppProfile: '$(system.teamProject)'
+    sandboxName: 
+    scanType: 'Static, SCA'
+    importType: 'All Unmitigated Flaws Violating Policy'
+    workItemType: 'Bug'
+    area: '$(system.teamProject)'
+    overwriteAreaPathInWorkItemsOnImport: true
+    iterationPath: '$(system.teamProject)'
+    overwriteIterationPath: true
+    flawImportLimit: '1000'
