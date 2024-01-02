@@ -23,7 +23,8 @@ steps:
     goals: 'package'
 
 ### VERACODE PIPELINE SCAN SAST ###
-#  Set API ID & Key as variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
+# Set API ID & Key as variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
+# Requires SAST product subscription #
 
 - task: Bash@3
   displayName: Veracode Pipeline Scan SAST
@@ -44,6 +45,7 @@ steps:
 
 ### VERACODE AGENT-BASED SCA ###
 # Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
+# Requires SCA product subscription #
 
 - task: CmdLine@2
   displayName: Veracode Agent-based SCA
@@ -56,6 +58,7 @@ steps:
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 # Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
+# Requires SAST product subscription #
 # Note: changing 'createProfile' to true will consume an app license, if you're using that subscription type #
 
 - task: Veracode@3
@@ -95,6 +98,7 @@ steps:
 
 ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
 # Target images, repos, directories, archives, configure using https://docs.veracode.com/r/Scan_with_Veracode_Container_Security #
+# Requires Container Security product subscription #
 
 - task: Bash@3
   displayName: Veracode Container Security IaC, SCA
