@@ -109,13 +109,6 @@ steps:
       export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
       export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
       curl -fsS https://tools.veracode.com/veracode-cli/install | sh
-      ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.json
+      ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table
       cat ./containerresults.json
   continueOnError: true
-
-- task: PublishPipelineArtifact@1
-  displayName: Store scan results as artifact
-  inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/containerresults.json'
-    artifact: 'Container Security results'
-    publishLocation: 'pipeline'
