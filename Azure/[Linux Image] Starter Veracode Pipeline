@@ -56,7 +56,7 @@ steps:
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 # Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
-# Note: changing 'createProfile' to true will consume an app license #
+# Note: changing 'createProfile' to true will consume an app license, if you're using that subscription type #
 
 - task: Veracode@3
   displayName: Veracode Upload and Scan SAST, SCA
