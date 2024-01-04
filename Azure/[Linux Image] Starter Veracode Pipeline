@@ -26,22 +26,6 @@ jobs:
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
       goals: 'package'
 
-### VERACODE AGENT-BASED SCA ###
-# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
-# Set SRCCLR_API_TOKEN as secret variable #
-# Requires SCA product subscription. Scans repo directly, not build artifact. #
-
-- job: AgentbasedSCA
-  steps:
-  - task: CmdLine@2
-    displayName: Conduct Scan
-    env:
-      SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
-    inputs:
-      script: |
-        curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty
-    continueOnError: true
-
 ### VERACODE PIPELINE SCAN SAST ###
 # Set API ID & Key as secret variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
 # Requires SAST product subscription #
@@ -88,6 +72,22 @@ jobs:
       failBuildOnPolicyFail: true
       optargs: '-deleteincompletescan 1, -scanpollinginterval 60'
       maximumWaitTime: '90'
+    continueOnError: true
+
+### VERACODE AGENT-BASED SCA ###
+# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
+# Set SRCCLR_API_TOKEN as secret variable #
+# Requires SCA product subscription. Scans a repo directly, not build artifact. #
+
+- job: AgentbasedSCA
+  steps:
+  - task: CmdLine@2
+    displayName: Conduct Scan
+    env:
+      SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+    inputs:
+      script: |
+        curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty
     continueOnError: true
 
 ### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
