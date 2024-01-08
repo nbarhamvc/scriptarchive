@@ -1,0 +1,109 @@
+### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM ###
+# THIS PIPELINE MAKES EXTENSIVE USE OF ALLOW_FAILURE:TRUE - THIS IS FOR DEMONSTRATION PURPOSES ONLY. YOU MAY WANT TO FAIL A JOB BASED ON SOME SCAN TYPES #
+
+stages:
+    - "Build for Veracode"
+    - "SCA only"
+    - "SAST only"
+    - "Platform SAST & SCA Reporting"
+    - "Container Security"
+
+### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
+# Reference packaging guidance for your language/framework at https://docs.veracode.com/cheatsheet #
+
+Build app:
+    image: maven:3-openjdk-8
+    stage: "Build for Veracode"
+    script:
+      - mvn clean package -f ./app
+    artifacts:
+        paths:
+        - app/
+
+### VERACODE AGENT-BASED SCA ###
+# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
+# Set SRCCLR_API_TOKEN as secret variable #
+# Requires SCA product subscription. Scans a repo directly, not build artifact. #
+
+Agent-based SCA:
+    image: maven:3-openjdk-8
+    stage: "SCA only"
+    needs: []
+    script:
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan ./app --allow-dirty --update-advisor
+    allow_failure: true
+
+### VERACODE PIPELINE SCAN SAST ###
+# Set API ID & Key as secret variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
+# Requires SAST product subscription #
+
+Pipeline Scan SAST:
+    image: veracode/pipeline-scan:latest
+    stage: "SAST only"
+    needs:
+        - Build app
+    dependencies:
+        - Build app
+    script:
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f {filetouploadforscanning} -gig true -gvg true
+    artifacts:
+        paths:
+            - results.json
+            - filtered_results.json
+        when: always
+        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    allow_failure: true
+
+### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+# Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
+# Requires SAST product subscription #
+# Note: using 'createProfile' as true will consume an app license, if you're using that subscription type #
+
+Policy or Sandbox SAST, SCA Scan:
+    image: veracode/api-wrapper-java
+    stage: "Platform SAST & SCA Reporting"
+    needs:
+        - Build app
+    dependencies:
+        - Build app
+    script:
+        - java -jar /opt/veracode/api-wrapper.jar 
+            -vid ${VERACODE_API_ID} 
+            -vkey ${VERACODE_API_KEY}
+            -action UploadAndScan 
+            -appname ${CI_PROJECT_NAME} 
+            -createprofile true 
+            -scanpollinginterval 60
+            -autoscan true
+            -filepath {filetouploadforscanning}
+            -version "GL Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+            -scantimeout 90
+    allow_failure: true
+
+### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
+# Requires Container Security Subscription, configure using https://docs.veracode.com/r/Veracode_CLI #
+
+Container Security IaC, SCA, SBOM:
+    image: maven:3-openjdk-8
+    stage: "Container Security"
+    needs: []
+    script: |
+        pwd
+        export VERACODE_API_KEY_ID=${VERACODE_API_ID}
+        export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
+        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.txt
+        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./containerresults.json
+        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./SBOM.json
+        cat ./containerresults.txt
+        echo Generated table, JSON and SBOM artifacts
+        PASS=$(cat ./containerresults.json | jq -r '."policy-passed"' )
+        #PASS='passed'
+        echo "Passed policy: $PASS"
+        if [ $PASS == 'false' ]
+        then
+          exit 1
+        else
+          exit 0
+        fi
+    allow_failure: true
