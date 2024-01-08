@@ -9,7 +9,7 @@ stages:
     - "Container Security"
 
 ### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
-# Reference packaging guidance for your language/framework at https://docs.veracode.com/cheatsheet #
+# YOU MUST reference packaging guidance for your language/framework at https://docs.veracode.com/cheatsheet #
 
 Build app:
     image: maven:3-openjdk-8
