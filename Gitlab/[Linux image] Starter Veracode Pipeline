@@ -84,17 +84,18 @@ Policy or Sandbox SAST, SCA Scan:
 # Requires Container Security Subscription, configure using https://docs.veracode.com/r/Veracode_CLI #
 
 Container Security IaC, SCA, SBOM:
-    image: maven:3-openjdk-8
+    image: python:latest
     stage: "Container Security"
     needs: []
     script: |
-        pwd
+        apt update
+        apt install -y jq
         export VERACODE_API_KEY_ID=${VERACODE_API_ID}
         export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
         curl -fsS https://tools.veracode.com/veracode-cli/install | sh
-        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.txt
-        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./containerresults.json
-        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./SBOM.json
+        ./veracode scan --source . --type directory --format table --output ./containerresults.txt
+        ./veracode scan --source . --type directory --format json --output ./containerresults.json
+        ./veracode scan --source . --type directory --format json --output ./SBOM.json
         cat ./containerresults.txt
         echo Generated table, JSON and SBOM artifacts
         PASS=$(cat ./containerresults.json | jq -r '."policy-passed"' )
