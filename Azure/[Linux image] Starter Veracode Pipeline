@@ -111,59 +111,59 @@ jobs:
 
 ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
 # Requires Container Security Subscription #
-
-- job: ContainerSecurityIaC
-  dependsOn: UploadandScanSASTSCA
-  steps:
-  - task: Bash@3
-    displayName: Conduct Scan
-    inputs:
-      targetType: inline
-      script: |
-        pwd
-        export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
-        export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
-        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
-        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.txt
-        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./containerresults.json
-        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./SBOM.json
-        cat ./containerresults.txt
-        echo Generated table, JSON and SBOM artifacts
-    continueOnError: true
-
-  - task: PublishPipelineArtifact@1
-    displayName: Store results as table artifact
-    inputs:
-      targetPath: '$(System.DefaultWorkingDirectory)/containerresults.txt'
-      artifact: 'Container Security .txt results'
-      publishLocation: 'pipeline'
-
-  - task: PublishPipelineArtifact@1
-    displayName: Store results as JSON artifact
-    inputs:
-      targetPath: '$(System.DefaultWorkingDirectory)/containerresults.json'
-      artifact: 'Container Security .json results'
-      publishLocation: 'pipeline'
-
-  - task: PublishPipelineArtifact@1
-    displayName: Store results as SBOM artifact
-    inputs:
-      targetPath: '$(System.DefaultWorkingDirectory)/SBOM.json'
-      artifact: 'Container Security SBOM results'
-      publishLocation: 'pipeline'
-
-  - task: Bash@3
-    displayName: Check Container Policy pass/fail
-    inputs:
-      targetType: 'inline'
-      script: |
-        PASS=$(cat $(System.DefaultWorkingDirectory)/containerresults.json | jq -r '."policy-passed"' )
-        #PASS='passed'
-        echo "Passed policy: $PASS"
-        if [ $PASS == 'false' ]
-        then
-          exit 1
-        else
-          exit 0
-        fi
-    continueOnError: true
+#
+#- job: ContainerSecurityIaC
+#  dependsOn: UploadandScanSASTSCA
+#  steps:
+#  - task: Bash@3
+#    displayName: Conduct Scan
+#    inputs:
+#      targetType: inline
+#      script: |
+#        pwd
+#        export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
+#        export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
+#        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+#        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.txt
+#        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./containerresults.json
+#        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./SBOM.json
+#        cat ./containerresults.txt
+#        echo Generated table, JSON and SBOM artifacts
+#    continueOnError: true
+#
+#  - task: PublishPipelineArtifact@1
+#    displayName: Store results as table artifact
+#    inputs:
+#      targetPath: '$(System.DefaultWorkingDirectory)/containerresults.txt'
+#      artifact: 'Container Security .txt results'
+#      publishLocation: 'pipeline'
+#
+#  - task: PublishPipelineArtifact@1
+#    displayName: Store results as JSON artifact
+#    inputs:
+#      targetPath: '$(System.DefaultWorkingDirectory)/containerresults.json'
+#      artifact: 'Container Security .json results'
+#      publishLocation: 'pipeline'
+#
+#  - task: PublishPipelineArtifact@1
+#    displayName: Store results as SBOM artifact
+#    inputs:
+#      targetPath: '$(System.DefaultWorkingDirectory)/SBOM.json'
+#      artifact: 'Container Security SBOM results'
+#      publishLocation: 'pipeline'
+#
+#  - task: Bash@3
+#    displayName: Check Container Policy pass/fail
+#    inputs:
+#      targetType: 'inline'
+#      script: |
+#        PASS=$(cat $(System.DefaultWorkingDirectory)/containerresults.json | jq -r '."policy-passed"' )
+#        #PASS='passed'
+#        echo "Passed policy: $PASS"
+#        if [ $PASS == 'false' ]
+#        then
+#          exit 1
+#        else
+#          exit 0
+#        fi
+#    continueOnError: true
