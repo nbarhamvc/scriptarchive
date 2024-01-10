@@ -68,7 +68,7 @@ jobs:
       with:
         vid: ${{secrets.VERACODE_API_ID}}
         vkey: ${{secrets.VERACODE_API_KEY}}
-        file: ./verademo.war
+        file: {filetouploadforVeracodeScanning}
         token: ${{ github.token }}
         fail_on_severity: VeryHigh,High
         filtered_json_output_file: filtered_results.json
@@ -129,7 +129,7 @@ jobs:
       with:
         appname: ${{ github.repository }}
         createprofile: true
-        filepath: ./verademo.war
+        filepath: {filetouploadforVeracodeScanning}
         version: ${{ github.run_id }}
         vid: ${{secrets.VERACODE_API_ID}}
         vkey: ${{secrets.VERACODE_API_KEY}}
