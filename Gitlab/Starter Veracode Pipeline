@@ -1,6 +1,10 @@
 ### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM ###
 # THIS PIPELINE MAKES EXTENSIVE USE OF ALLOW_FAILURE:TRUE - THIS IS FOR DEMONSTRATION PURPOSES ONLY. YOU MAY WANT TO FAIL A JOB BASED ON SOME SCAN TYPES #
 
+# IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets ${VERACODE_API_ID} and ${VERACODE_API_KEY} #
+# Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation. #
+# This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive. #
+
 stages:
     - "Build for Veracode"
     - "SCA only"
@@ -9,7 +13,10 @@ stages:
     - "Container Security"
 
 ### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
-# YOU MUST reference packaging guidance for your language/framework at https://docs.veracode.com/cheatsheet #
+
+# IMPORTANT: You must package your application correctly per: https://docs.veracode.com/r/compilation_packaging, or using the cheat sheet: https://docs.veracode.com/cheatsheet/ #
+# If after reading the guidance you need additional help packaging, please log into the Veracode web UI and click the 'Schedule a Consultation' button to schedule a call. #
+# Note the team that will join a call to help with packaging will not be able to help with pipeline configuration. Contact your Veracode CSM for this and they will arrange a resource. #
 
 Build app:
     image: maven:3-openjdk-8
@@ -21,9 +28,11 @@ Build app:
         - app/
 
 ### VERACODE AGENT-BASED SCA ###
+
 # Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
-# Set SRCCLR_API_TOKEN as secret variable #
-# Requires SCA product subscription. Scans a repo directly, not build artifact. #
+# Scans repository directly, instead of using compiled/packaged artifacts. #
+# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitLab. #
+# Requires SCA product subscription. See https://docs.veracode.com/r/Agent_Based_Scans for more details. #
 
 Agent-based SCA:
     image: maven:3-openjdk-8
@@ -34,8 +43,11 @@ Agent-based SCA:
     allow_failure: true
 
 ### VERACODE PIPELINE SCAN SAST ###
-# Set API ID & Key as secret variables. Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands #
-# Requires SAST product subscription #
+
+# IMPORTANT: The upload limit for Pipeline Scans is 200MB.
+# Results from Pipeline Scan are not visible in the web UI. They are visible in the build log and as a generated results.json file.
+# Language coverage is reduced when compared with Upload and Scan. See coverage here: https://docs.veracode.com/r/Pipeline_Scan_Supported_Languages
+# Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands. Requires SAST product subscription #
 
 Pipeline Scan SAST:
     image: veracode/pipeline-scan:latest
@@ -55,9 +67,13 @@ Pipeline Scan SAST:
     allow_failure: true
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+
+# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting.
+# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI.
+# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter.
+# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below.
 # Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
-# Requires SAST product subscription #
-# Note: using 'createProfile' as true will consume an app license, if you're using that subscription type #
+# Requires SAST product subscription. Note: using 'createProfile' as true will consume an app license, if you're using that subscription type #
 
 Policy or Sandbox SAST, SCA Scan:
     image: veracode/api-wrapper-java
@@ -82,7 +98,8 @@ Policy or Sandbox SAST, SCA Scan:
     allow_failure: true
 
 ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
-# Requires Container Security Subscription, configure using https://docs.veracode.com/r/Veracode_CLI #
+
+# Requires Container Security Subscription. Configure using https://docs.veracode.com/r/Veracode_CLI #
 
 Container Security IaC, SCA, SBOM:
     image: python:latest
