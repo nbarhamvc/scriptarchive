@@ -1,5 +1,5 @@
 # NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM
-# EACH OF THE BELOW ARE BUILD STEPS CONFIGURED FOR THE PROJECT IN TEAMCITY #
+# EACH OF THE BELOW ARE BUILD STEPS CONFIGURED FOR THE PROJECT IN TEAMCITY. THIS VIEW OBTAINED BY SELECTING 'VIEW AS CODE' IN BULID CONFIGURATION. #
 
 # IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets env.VERACODE_API_ID and env.VERACODE_API_KEY #
 # Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation. #
@@ -38,12 +38,12 @@ object Build : BuildType({
 
 # Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
 # Scans repository directly, instead of using compiled/packaged artifacts. #
-# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitLab. #
+# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as an env. secret in TeamCity. #
 # Requires SCA product subscription. #
 
         script {
             name = "Agent-based SCA"
-            scriptContent = "curl -sSL https://download.sourceclear.com/ci.sh | sh"
+            scriptContent = "curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan --allow-dirty --update-advisor"
         }
 
 ### VERACODE PIPELINE SCAN SAST ###
@@ -74,7 +74,7 @@ object Build : BuildType({
         step {
             name = "Upload and Scan SAST, SCA (Policy) with Veracode"
             type = "teamcity-veracode-plugin"
-            param("deleteIncompleteScan", "0")
+            param("deleteIncompleteScan", "1")
             param("appName", "APPNAMEASONVERACODEPLATFORM")
             param("criticality", "VeryHigh")
             param("useGlobalCredentials", "true")
@@ -84,7 +84,7 @@ object Build : BuildType({
             param("createProfile", "false")
             param("waitForScan", "true")
             param("createSandbox", "false")
-            param("scanTimeOut", "30")
+            param("scanTimeOut", "90")
             param("vkey", "VERACODEAPIKEY")
         }
     }
