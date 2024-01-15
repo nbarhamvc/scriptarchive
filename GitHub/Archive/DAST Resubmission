@@ -1,0 +1,27 @@
+name: DAST resubmission
+on: workflow_dispatch
+
+jobs:
+
+  CreateJSON:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Azure PowerShell Action
+          uses: Azure/powershell@v1
+          with:
+            azPSVersion: latest
+            inlineScript: |
+              $str = '{"name": "Verademo", "schedule": { "duration": { "length": 1, "unit": "DAY" }, "scheduled": true, "now": true } } ' 
+              Write-Output $str | Out-file -FilePath ./dainput.json
+              mkdir ~/.veracode
+              echo "Successfully created directory"
+              printf "[default]\nveracode_api_key_id = ${{secrets.VERACODE_API_ID}}\nveracode_api_key_secret = ${{secrets.VERACODE_API_KEY}}" > ~/.veracode/credentials
+              python --version
+              python -m pip install --upgrade pip wheel
+              python -m pip install httpie
+              git clone https://github.com/veracode/veracode-python-hmac-example.git
+              cd veracode-python-hmac-example
+              pip install -r requirements.txt
+              cd ..
+              Get-Content ./dainput.json |  http --auth-type=veracode_hmac PUT "https://api.veracode.com/was/configservice/v1/analyses/ENTERANALYSISURLFROMPLATFORM?method=PATCH"
+              echo "Scan submitted successfully"
