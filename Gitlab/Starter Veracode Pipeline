@@ -66,7 +66,7 @@ Pipeline Scan SAST:
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX SCAN) ###
 
 # IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting.
 # The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI.
