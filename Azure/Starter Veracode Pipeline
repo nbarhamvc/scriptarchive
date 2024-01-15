@@ -110,7 +110,7 @@ jobs:
 
 # Optional import to Azure Boards as work items, configure using https://docs.veracode.com/r/t_importflaws #
 
-- job: ImportPolicyorSandboxResults
+- job: ImportUploandScanResults
   dependsOn: UploadandScanSASTSCA
   steps:
   - task: Veracode Flaw Importer@3
