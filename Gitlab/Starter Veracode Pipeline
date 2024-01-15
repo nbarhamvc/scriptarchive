@@ -100,28 +100,28 @@ Policy or Sandbox SAST, SCA Scan:
 
 # Requires Container Security Subscription. Configure using https://docs.veracode.com/r/Veracode_CLI #
 
-Container Security IaC, SCA, SBOM:
-    image: python:latest
-    stage: "Container Security"
-    needs: []
-    script: |
-        apt update
-        apt install -y jq
-        export VERACODE_API_KEY_ID=${VERACODE_API_ID}
-        export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
-        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
-        ./veracode scan --source . --type directory --format table --output ./containerresults.txt
-        ./veracode scan --source . --type directory --format json --output ./containerresults.json
-        ./veracode scan --source . --type directory --format json --output ./SBOM.json
-        cat ./containerresults.txt
-        echo Generated table, JSON and SBOM artifacts
-        PASS=$(cat ./containerresults.json | jq -r '."policy-passed"' )
-        #PASS='passed'
-        echo "Passed policy: $PASS"
-        if [ $PASS == 'false' ]
-        then
-          exit 1
-        else
-          exit 0
-        fi
-    allow_failure: true
+# Container Security IaC, SCA, SBOM:
+#    image: python:latest
+#    stage: "Container Security"
+#    needs: []
+#    script: |
+#        apt update
+#        apt install -y jq
+#        export VERACODE_API_KEY_ID=${VERACODE_API_ID}
+#        export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
+#        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+#        ./veracode scan --source . --type directory --format table --output ./containerresults.txt
+#        ./veracode scan --source . --type directory --format json --output ./containerresults.json
+#        ./veracode scan --source . --type directory --format json --output ./SBOM.json
+#        cat ./containerresults.txt
+#        echo Generated table, JSON and SBOM artifacts
+#        PASS=$(cat ./containerresults.json | jq -r '."policy-passed"' )
+#        #PASS='passed'
+#        echo "Passed policy: $PASS"
+#        if [ $PASS == 'false' ]
+#        then
+#          exit 1
+#        else
+#          exit 0
+#        fi
+#    allow_failure: true
