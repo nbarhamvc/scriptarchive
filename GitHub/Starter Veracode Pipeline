@@ -1,24 +1,26 @@
-########## GENERAL INFORMATION ###########
+### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM ###
+# THIS PIPELINE MAKES EXTENSIVE USE OF ALLOW_FAILURE:TRUE - THIS IS FOR DEMONSTRATION PURPOSES ONLY. YOU MAY WANT TO FAIL A JOB BASED ON SOME SCAN TYPES #
 
-# IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets ${{secrets.VERACODE_API_ID}} and ${{secrets.VERACODE_API_KEY}} 
-# Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation.
-# This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive.
+# IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets ${{secrets.VERACODE_API_ID}} and ${{secrets.VERACODE_API_KEY}} #
+# Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation. #
+# This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive. #
+# Actions in the below YML are all obtainable from https://github.com/marketplace?category=&type=actions&verification=&query=veracode #
 
-########## PIPELINE TRIGGER ###########
+### PIPELINE TRIGGER ###
 
-# Pipeline is configured to run manually for demonstration purposes only. Typically would not run all of these scans sequentially, for example may run on Pull Request.
-# For more assistance with where and when to run these scans, contact your Vercode CSM and they will arrange a resource.
+# Pipeline is configured to run manually for demonstration purposes only. Typically would not run all of these scans sequentially, for example may run on Pull Request. #
+# For more assistance with where and when to run these scans, contact your Vercode CSM and they will arrange a resource. #
 
 name: Starter Veracode Pipeline
 on: workflow_dispatch
 
 jobs:
 
-########## CHECK OUT CODE, PACKAGE WAR AND STORE ARTIFACT ###########
+### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
 
-# IMPORTANT: You must package your application correctly per: https://docs.veracode.com/r/compilation_packaging, or using the cheat sheet: https://docs.veracode.com/cheatsheet/
-# If after reading the guidance you need additional help packaging, please log into the Veracode web UI and click the 'Schedule a Consultation' button to schedule a call.
-# Note the team that will join a call to help with packaging will not be able to help with pipeline configuration. Contact your Veracode CSM and they will arrange a resource.
+# IMPORTANT: You must package your application correctly per: https://docs.veracode.com/r/compilation_packaging, or using the cheat sheet: https://docs.veracode.com/cheatsheet/ #
+# If after reading the guidance you need additional help packaging, please log into the Veracode web UI and click the 'Schedule a Consultation' button to schedule a call. #
+# Note the team that will join a call to help with packaging will not be able to help with pipeline configuration. Contact your Veracode CSM for this and they will arrange a resource. #
 
   Checkoutandbuild:
     runs-on: ubuntu-latest
@@ -44,12 +46,13 @@ jobs:
         name: {filetouploadforVeracodeScanning}
         path: {path&filetouploadforVeracodeScanning}
 
-########## VERACODE PIPLINE SCAN SAST ###########
+### VERACODE PIPELINE SCAN SAST ###
 
 # IMPORTANT: The upload limit for Pipeline Scans is 200MB.
-# Results from Pipeline Scan are not visible in the web UI. They are visible in the build log and as a results.json file.
-# Language coverage is reduced when compared with Upload and Scan. See coverage here: https://docs.veracode.com/r/Pipeline_Scan_Supported_Languages
-# The below makes use of the Veracode GitHub Actions relating to Pipeline Scan and import into GitHub Issues.
+# Results from Pipeline Scan are not visible in the web UI. They are visible in the build log and as a results.json file. #
+# Language coverage is reduced when compared with Upload and Scan. See coverage here: https://docs.veracode.com/r/Pipeline_Scan_Supported_Languages. #
+# Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands. Requires SAST product subscription #
+# The below makes use of the Veracode GitHub Actions relating to Pipeline Scan and imports findings into GitHub Issues. #
 
   VeracodePipelineScan:
     needs: Checkoutandbuild
@@ -81,7 +84,7 @@ jobs:
         name: filtered-results
         path: filtered_results.json
 
-# Importing filtered_results.json into GitHub Issues
+# Importing filtered_results.json into GitHub Issues #
 
   VeracodePipelineScanResultsImport:
     needs: VeracodePipelineScan
@@ -100,17 +103,17 @@ jobs:
         scan-results-json: filtered_results.json
         github-token: ${{ github.token }}
 
-# Note: To be able to see code snippets in GitHub Issues, the below paths should be correspond to the location of the source code in your application:
+# Note: To be able to see code snippets in GitHub Issues, the below paths should be correspond to the location of the source code in your application: #
 
         source_base_path_1: "com/veracode:src/main/java/com/veracode" 
         source_base_path_2: "WEB-INF:src/main/webapp/WEB-INF"
 
 ########## VERACODE UPLOAD AND SCAN SAST, SCA (Policy or Sandbox Scan) ###########
 
-# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting.
-# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI.
-# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter.
-# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below.
+# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting. #
+# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI. #
+# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter. #
+# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below. #
 
   UploadandScan:
     runs-on: ubuntu-latest
@@ -140,9 +143,10 @@ jobs:
 
 ########## VERACODE AGENT-BASED SCA ###########
 
-# Scans repository directly, instead of using compiled/packaged artifacts, then imports results into GitHub Issues.
-# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitHub.
-# See https://docs.veracode.com/r/Agent_Based_Scans for more details.
+# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
+# Scans repository directly, instead of using compiled/packaged artifacts, then imports results into GitHub Issues. #
+# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitHub. #
+# Requires SCA product subscription. See https://docs.veracode.com/r/Agent_Based_Scans for more details. #
 
   Agent-basedSCA:
     runs-on: ubuntu-latest
@@ -163,7 +167,7 @@ jobs:
             allow-dirty: true
       continue-on-error: true
 
-# At present, above action does not output results in build log. If this is required, use OPTIONAL step below instead/in addition.
+# At present, above action does not output results in build log. If this is required, use OPTIONAL step below instead/in addition. #
 
     - name: OPTIONAL Agent-based SCA scan with results in build log
       env:
@@ -171,7 +175,9 @@ jobs:
       run: |
           curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan --allow-dirty --update-advisor
   
-  ########## VERACODE CONTAINER SECURITY (IaC, Secrets, SCA Vulnerabilities) ###########
+### VERACODE CONTAINER SECURITY (IaC, Secrets, SCA Vulnerabilities) ###
+
+# Requires Container Security Subscription. Configure using https://docs.veracode.com/r/Veracode_CLI #
 
   VeracodeContainerIaCSecrets:
     runs-on: ubuntu-latest
