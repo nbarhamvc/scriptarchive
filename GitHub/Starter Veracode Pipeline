@@ -146,7 +146,7 @@ jobs:
 # Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
 # Scans repository directly, instead of using compiled/packaged artifacts, then imports results into GitHub Issues. #
 # Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitHub. #
-# Requires SCA product subscription. See https://docs.veracode.com/r/Agent_Based_Scans for more details. #
+# Requires SCA product subscription. #
 
   Agent-basedSCA:
     runs-on: ubuntu-latest
@@ -179,20 +179,20 @@ jobs:
 
 # Requires Container Security Subscription. Configure using https://docs.veracode.com/r/Veracode_CLI #
 
-  VeracodeContainerIaCSecrets:
-    runs-on: ubuntu-latest
+#  VeracodeContainerIaCSecrets:
+#    runs-on: ubuntu-latest
 
-    steps:
+#    steps:
     
-    - name: Veracode Container/IaC/Secrets Scanning GitHub Action
-      uses: veracode/container_iac_secrets_scanning@v1.0.0
-      with:
-        vid: ${{secrets.VERACODE_API_ID}}
-        vkey: ${{secrets.VERACODE_API_KEY}}
-        github-token: ${{ github.token }}
-        command: scan
-        source: https://github.com/bridgecrewio/terragoat
-        format: json
-        type: repo
-        fail_build: true
-      continue-on-error: true
+#    - name: Veracode Container/IaC/Secrets Scanning GitHub Action
+#      uses: veracode/container_iac_secrets_scanning@v1.0.0
+#      with:
+#        vid: ${{secrets.VERACODE_API_ID}}
+#        vkey: ${{secrets.VERACODE_API_KEY}}
+#        github-token: ${{ github.token }}
+#        command: scan
+#        source: https://github.com/bridgecrewio/terragoat
+#        format: json
+#        type: repo
+#        fail_build: true
+#      continue-on-error: true
