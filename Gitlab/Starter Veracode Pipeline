@@ -68,10 +68,10 @@ Pipeline Scan SAST:
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX SCAN) ###
 
-# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting.
-# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI.
-# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter.
-# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below.
+# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting. #
+# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI. #
+# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter. #
+# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below. #
 # Requires SAST product subscription. Note: using 'createProfile' as true will consume an app license, if you're using that subscription type #
 
 Policy or Sandbox SAST, SCA Scan:
