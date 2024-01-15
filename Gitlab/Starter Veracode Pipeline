@@ -57,7 +57,7 @@ Pipeline Scan SAST:
     dependencies:
         - Build app
     script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f {filetouploadforscanning} -gig true -gvg true
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f {file(s)touploadforscanningwithVeracode} -gig true -gvg true
     artifacts:
         paths:
             - results.json
@@ -91,7 +91,7 @@ Policy or Sandbox SAST, SCA Scan:
             -scanpollinginterval 60
             -autoscan true
             -deleteincompletescan 1
-            -filepath {filetouploadforscanning}
+            -filepath {file(s)touploadforscanningwithVeracode}
             -version "GL Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
             -scantimeout 90
     allow_failure: true
