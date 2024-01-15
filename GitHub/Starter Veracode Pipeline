@@ -141,7 +141,7 @@ jobs:
         scanpollinginterval: 60
       continue-on-error: true
 
-########## VERACODE AGENT-BASED SCA ###########
+### VERACODE AGENT-BASED SCA ###
 
 # Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
 # Scans repository directly, instead of using compiled/packaged artifacts, then imports results into GitHub Issues. #
