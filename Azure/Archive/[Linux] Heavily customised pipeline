@@ -1,0 +1,239 @@
+### NOTE: THIS CUSTOMISED PIPELINE CONTAINS ***VERACODE COMMUNITY OPEN-SOURCE SCRIPTS AND CUSTOMISATIONS*** ###
+### THESE ARE PROVIDED 'AS IS' BUT ARE NOT OFFICIALLY SUPPORTED BY VERACODE, NOR IS THERE COMMITMENT TO CUSTOMISE THEM FURTHER ###
+### PLEASE CONTACT YOUR CSM/CSE FOR FURTHER CLARIFICATION WHETHER A FEATURE IN THIS PIPELINE IS COMMUNITY OR NOT ###
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+
+### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
+
+- job: BuildforUploadtoVeracode
+  steps:
+  - task: Maven@3
+    displayName: Maven Build of Vuln App
+    inputs:
+      mavenPomFile: 'pom.xml'
+      mavenOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.8'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      goals: 'package'
+
+### VERACODE PIPELINE SCAN SAST ###
+
+- job: PipelineScanSAST
+  dependsOn: BuildforUploadtoVeracode
+  steps:
+  - task: Bash@3
+    displayName: Veracode Pipeline Scan SAST
+    inputs:
+      targetType: 'inline'
+      script: |
+        curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+        unzip -o pipeline-scan-LATEST.zip
+        java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) --request_policy "YOURPOLICYHERE"
+        java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) --file {filetouploadtoVeracode} --issue_details true --policy_file Nickpolicy.json -fjf filtered_results.json
+    continueOnError: true
+
+  - task: Bash@3
+    displayName: Record warnings
+    inputs:
+      targetType: 'inline'
+      script: |
+        declare -i vhighsevcount=$(grep -c '"severity": 5' $(System.DefaultWorkingDirectory)/filtered_results.json)
+        declare -i highsevcount=$(grep -c '"severity": 4' $(System.DefaultWorkingDirectory)/filtered_results.json)
+        echo "##vso[task.logissue type=warning]Found $vhighsevcount Very High severity SAST findings in Pipeline Scan.";
+        echo "##vso[task.logissue type=warning]Found $highsevcount High severity SAST findings in Pipeline Scan.";
+
+### *** WARNING: COMMUNITY EXTENSION BELOW *** ###
+
+  - task: Bash@3
+    displayName: Community generate baseline from mitigations
+    inputs:
+      targetType: 'inline'
+      script: |
+        git clone https://github.com/tjarrettveracode/veracode-pipeline-mitigation
+        cd veracode-pipeline-mitigation
+        pip install -r requirements.txt
+        export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
+        export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
+        python vcpipemit.py -a 0f080776-04ac-4738-83cb-9ff2289e9003 -rf ../results.json
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store baseline with approved mitigations
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/veracode-pipeline-mitigation/baseline-0f080776-04ac-4738-83cb-9ff2289e9003.json'
+      artifact: 'Baseline file from mitigated flaws'
+      publishLocation: 'pipeline'
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store scan results as artifact 1
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/results.json'
+      artifact: 'Unfiltered Pipeline Scan SAST results'
+      publishLocation: 'pipeline'
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store scan results as artifact 2
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/filtered_results.json'
+      artifact: 'Policy filtered Pipeline Scan SAST results'
+      publishLocation: 'pipeline'
+
+### *** WARNING: COMMUNITY EXTENSION BELOW *** ###
+
+  - task: CmdLine@2
+    displayName: Community convert JSON scan results to HTML and XML
+    inputs:
+      script: |
+        echo Saving results as HTML and XML files
+        curl -sSO https://raw.githubusercontent.com/cadonuno/pipeline2detailedreport/master/detailedreport.py 
+        python detailedreport.py --html
+        python detailedreport.py --html --html_name "filtered_results.html" --xml_name "filtered_results.xml" -f filtered_results.json
+        echo Finished saving results as HTML and XML files
+    condition:
+        succeededOrFailed()
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store scan results as artifact 3
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/filtered_results.html'
+      artifact: 'Filtered results as visual HTML'
+      publishLocation: 'pipeline'
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store scan results as artifact 4
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/filtered_results.xml'
+      artifact: 'Filtered results as XML'
+      publishLocation: 'pipeline'
+
+### *** WARNING: COMMUNITY EXTENSION BELOW *** ###
+
+  - task: CmdLine@2
+    displayName: Community convert JSON scan results to JUnit format
+    inputs:
+      script: |
+        echo Saving filtered results as JUnit XML file
+        curl -sSO https://raw.githubusercontent.com/cadonuno/Pipeline2JUnitXml/main/pipeline2junitxml.py
+        python pipeline2junitxml.py -f filtered_results.json --xml_name filtered_JUnit.xml
+        echo Finished generating JUnit file
+    condition:
+        succeededOrFailed()
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store scan results as artifact 5
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/filtered_JUnit.xml'
+      artifact: 'Filtered results in JUnit format'
+      publishLocation: 'pipeline'
+
+### *** WARNING: COMMUNITY EXTENSION BELOW *** ###
+
+  - task: VeracodePipelineScan@0
+    displayName: Communtiy Pipeline Scan SAST using unofficial task 1
+    inputs:
+      VeracodeAPIID: '$(VERACODE_API_ID)'
+      VeracodeAPIsecret: '$(VERACODE_API_KEY)'
+      fileToScan: '$(System.DefaultWorkingDirectory)/target/verademo.war'
+      policyName: 'Nickpolicy'
+      baselineFile: '$(System.DefaultWorkingDirectory)/veracode-pipeline-mitigation/baseline-0f080776-04ac-4738-83cb-9ff2289e9003.json'
+      baselineFileStorageProject: 'Java App on Linux Image'
+      baselineFileStorageReponame: 'Vulnerable Java App'
+      baselineFileStorageBranch: 'refs/heads/main'
+
+### *** WARNING: COMMUNITY EXTENSION BELOW *** ###
+
+  - task: VeracodeCommunitySAST@1
+    displayName: Community Pipeline Scan SAST using unofficial task 2
+    inputs:
+      appName: 
+      scanTarget: '{filetouploadtoVeracode}'
+      minSeverity: 'Medium'
+      failBuild: true
+    continueOnError: true
+
+### VERACODE AGENT-BASED SCA ###
+
+### *** WARNING: COMMUNITY EXTENSION BELOW *** ###
+
+- job: AgentbasedSCA
+  steps:
+  - task: VeracodeCommunityScaAdoExtension@1
+    displayName: Community Pipeline Scan SAST using unofficial task 2
+    env:
+      SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+    inputs:
+        scanType: 'directory'
+        scanTarget: '.'
+        minCVSS: '7'
+        failBuild: true
+    continueOnError: true
+
+# ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+
+- job: UploadandScanSASTSCA
+  dependsOn: BuildforUploadtoVeracode
+  steps:
+  - task: Veracode@3
+    displayName: Veracode Upload and Scan SAST, SCA
+    inputs:
+      ConnectionDetailsSelection: 'Service Connection'
+      AnalysisService: 'Veracode Platform'
+      veracodeAppProfile: '$(system.teamProject)'
+      version: '$(build.buildNumber)'
+      filepath: '{filetouploadtoVeracode}'
+      createProfile: true
+      failBuildIfUploadAndScanBuildStepFails: true
+      importResults: true
+      failBuildOnPolicyFail: true
+      optargs: '-deleteincompletescan 1, -scanpollinginterval 60'
+      maximumWaitTime: '90'
+    continueOnError: true
+
+# ### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
+
+# - task: Veracode Flaw Importer@3
+#   displayName: Import Upload and Scan findings to Boards
+#   inputs:
+#     ConnectionDetailsSelection: 'Service Connection'
+#     AnalysisService: 'Veracode Platform'
+#     veracodeAppProfile: '$(system.teamProject)'
+#     sandboxName: 
+#     scanType: 'Static, SCA'
+#     importType: 'All Unmitigated Flaws Violating Policy'
+#     workItemType: 'Bug'
+#     area: '$(system.teamProject)'
+#     overwriteAreaPathInWorkItemsOnImport: true
+#     iterationPath: '$(system.teamProject)'
+#     overwriteIterationPath: true
+#     flawImportLimit: '1000'
+
+# ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
+
+# - task: Bash@3
+#   displayName: Veracode Container Security IaC, SCA
+#   inputs:
+#     targetType: inline
+#     script: |
+#       pwd
+#       export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
+#       export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
+#       curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+#       ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.json
+#       cat ./containerresults.json
+#   continueOnError: true
+
+# - task: PublishPipelineArtifact@1
+#   displayName: Store scan results as artifact
+#   inputs:
+#     targetPath: '$(System.DefaultWorkingDirectory)/containerresults.json'
+#     artifact: 'Container Security results'
+#     publishLocation: 'pipeline'
