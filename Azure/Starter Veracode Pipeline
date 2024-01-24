@@ -131,7 +131,7 @@ jobs:
 
 ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
 
-## Requires Container Security Subscription #
+# Requires Container Security Subscription, configure using https://docs.veracode.com/r/Veracode_CLI #
 
 - job: ContainerSecurityIaC
   dependsOn: UploadandScanSASTSCA
