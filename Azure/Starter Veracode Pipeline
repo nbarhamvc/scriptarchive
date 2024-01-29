@@ -102,7 +102,7 @@ jobs:
       failBuildIfUploadAndScanBuildStepFails: true
       importResults: true
       failBuildOnPolicyFail: true
-      optargs: '-deleteincompletescan 1, -scanpollinginterval 60'
+      optargs: '-deleteincompletescan 1 -scanpollinginterval 60'
       maximumWaitTime: '90'
     continueOnError: true
 
