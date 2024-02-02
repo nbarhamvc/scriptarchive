@@ -144,7 +144,7 @@ jobs:
       script: |
         pip install veracode-api-signing
         echo "Finished pip install"
-        export name=$(system.teamProject)
+        export name=ENTERAPPPROFILENAME
         mkdir ~/.veracode
         echo "Successfully created directory"
         printf "[default]\nveracode_api_key_id = $(VERACODE_API_ID)\nveracode_api_key_secret = $(VERACODE_API_KEY)" > ~/.veracode/credentials
