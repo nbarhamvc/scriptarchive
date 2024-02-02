@@ -153,9 +153,9 @@ jobs:
         echo "Call for GUID done"
         export appguid=$(cat getguid.json | jq -r '._embedded.applications[0].guid')
         echo "GUID export complete"
-        http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./"$(system.teamProject) SBOM.json" https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/cyclonedx?type=application
-        echo "SBOM successfully written to "$(system.teamProject) SBOM.json" file"
-  - publish: $(System.DefaultWorkingDirectory)/"$(system.teamProject) SBOM.json"
+        http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./"$(Build.BuildNumber).json" https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/cyclonedx?type=application
+        echo "SBOM successfully written to "$(Build.BuildNumber).json" file"
+  - publish: $(System.DefaultWorkingDirectory)/$(Build.BuildNumber).json
 
 ### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
 
