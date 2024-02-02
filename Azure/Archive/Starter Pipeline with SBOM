@@ -1,0 +1,218 @@
+### NOTE: THIS IS THE MOST *BASIC* VERACODE PIPELINE WITH ALL SCANS FOR DEMO PURPOSES. MUCH MORE CUSTOMISATION IS AVAILABLE! ASK YOUR CSM/CSE or SEE DOCS.VERACODE.COM ###
+# THIS PIPELINE MAKES EXTENSIVE USE OF CONTINUEONERROR:TRUE - THIS IS FOR DEMONSTRATION PURPOSES ONLY. YOU MAY WANT TO FAIL A JOB BASED ON SOME SCAN TYPES #
+
+# IMPORTANT: You must generate a Veracode API ID and Key in the Veracode web UI and store them as secrets $(VERACODE_API_ID) and $(VERACODE_API_KEY) #
+# Credentials from API Service Accounts should be used, rather than from individual user accounts. Refer to docs.veracode.com for additional documentation. #
+# This YML uses a deliberately vulnerable Java application and originated from https://github.com/nbarhamvc/scriptarchive. #
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+
+### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
+
+# IMPORTANT: You must package your application correctly per: https://docs.veracode.com/r/compilation_packaging, or using the cheat sheet: https://docs.veracode.com/cheatsheet/ #
+# If after reading the guidance you need additional help packaging, please log into the Veracode web UI and click the 'Schedule a Consultation' button to schedule a call. #
+# Note the team that will join a call to help with packaging will not be able to help with pipeline configuration. Contact your Veracode CSM for this and they will arrange a resource. #
+
+- job: BuildforUploadtoVeracode
+  steps:
+  - task: Maven@3
+    displayName: Maven Build of Vuln App
+    inputs:
+      mavenPomFile: 'pom.xml'
+      mavenOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.8'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      goals: 'package'
+
+### VERACODE AGENT-BASED SCA ###
+
+# Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
+# Scans repository directly, instead of using compiled/packaged artifacts. #
+# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitLab. #
+# Requires SCA product subscription. #
+
+- job: AgentbasedSCA
+  steps:
+  - task: CmdLine@2
+    displayName: Conduct Scan
+    env:
+      SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+    inputs:
+      script: |
+        curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty
+    continueOnError: true
+
+### VERACODE PIPELINE SCAN SAST ###
+
+# IMPORTANT: The upload limit for Pipeline Scans is 200MB.
+# Results from Pipeline Scan are not visible in the web UI. They are visible in the build log and as a generated results.json file.
+# Language coverage is reduced when compared with Upload and Scan. See coverage here: https://docs.veracode.com/r/Pipeline_Scan_Supported_Languages
+# Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands. Requires SAST product subscription #
+
+- job: PipelineScanSAST
+  dependsOn: BuildforUploadtoVeracode
+  steps:
+  - task: Bash@3
+    displayName: Conduct Scan
+    inputs:
+      targetType: 'inline'
+      script: |
+        curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+        unzip -o pipeline-scan-LATEST.zip
+        java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourcompiled/packagedfiletouploadtoVeracode}
+    continueOnError: true
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store scan results as artifact
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/results.json'
+      artifact: 'Pipeline Scan JSON results'
+      publishLocation: 'pipeline'
+
+### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
+
+# Install from Azure marketplace, create service connection, configure using https://docs.veracode.com/r/t_install_azure_devops_extension #
+# IMPORTANT: Only one Policy Scan can run at a time. Only one Sandbox Scan can run at a time (per Sandbox). There is no queueing or waiting.
+# The upload limit for Upload and Scan is 5GB. Results are visible in the Web UI.
+# A Policy Scan will take place by default unless a Sandbox name is specified as a parameter.
+# See https://docs.veracode.com/r/r_uploadandscan for more information on optional parameters below.
+# Requires SAST product subscription. Note: using 'createProfile' as true will consume an app license, if you're using that subscription type #
+
+- job: UploadandScanSASTSCA
+  dependsOn: BuildforUploadtoVeracode
+  steps:
+  - task: Veracode@3
+    displayName: Conduct Policy or Sandbox Scan
+    inputs:
+      ConnectionDetailsSelection: 'Service Connection'
+      AnalysisService: 'Veracode Platform'
+      veracodeAppProfile: '$(system.teamProject)'
+      version: '$(build.buildNumber)'
+      filepath: '{yourcompiled/packagedfiletouploadtoVeracode}'
+      createProfile: true
+      failBuildIfUploadAndScanBuildStepFails: true
+      importResults: true
+      failBuildOnPolicyFail: true
+      optargs: '-deleteincompletescan 1 -scanpollinginterval 60'
+      maximumWaitTime: '90'
+    continueOnError: true
+
+### VERACODE FLAW IMPORTER FOR MOST RECENT UPLOAD AND SCAN SAST, SCA ###
+
+# Optional import to Azure Boards as work items, configure using https://docs.veracode.com/r/t_importflaws #
+
+- job: ImportUploandScanResults
+  dependsOn: UploadandScanSASTSCA
+  steps:
+  - task: Veracode Flaw Importer@3
+    displayName: Import scan results to Azure Boards
+    inputs:
+      ConnectionDetailsSelection: 'Service Connection'
+      AnalysisService: 'Veracode Platform'
+      veracodeAppProfile: '$(system.teamProject)'
+      sandboxName: 
+      scanType: 'Static, SCA'
+      importType: 'All Unmitigated Flaws Violating Policy'
+      workItemType: 'Bug'
+      area: '$(system.teamProject)'
+      overwriteAreaPathInWorkItemsOnImport: true
+      iterationPath: '$(system.teamProject)'
+      overwriteIterationPath: true
+      flawImportLimit: '1000'
+
+### SBOM GENERATION FOR APPLICATION PROFILE ###
+
+# Submits API call for SBOM from latest Application Profile Policy Scan #
+# Edit API call to change from cyclonedx to spdx #
+
+- job: CreateSBOM
+  dependsOn: BuildforUploadtoVeracode
+  steps:
+  - task: Bash@3
+    displayName: Generate App Profile SBOM
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip install veracode-api-signing
+        echo "Finished pip install"
+        export name=$(system.teamProject)
+        mkdir ~/.veracode
+        echo "Successfully created directory"
+        printf "[default]\nveracode_api_key_id = $(VERACODE_API_ID)\nveracode_api_key_secret = $(VERACODE_API_KEY)" > ~/.veracode/credentials
+        echo "Wrote credentials to file successfully"
+        http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./getguid.json https://api.veracode.com/appsec/v1/applications?name=$name
+        echo "Call for GUID done"
+        export appguid=$(cat getguid.json | jq -r '._embedded.applications[0].guid')
+        echo "GUID export complete"
+        http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./"$(system.teamProject) SBOM.json" https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/cyclonedx?type=application
+        echo "SBOM successfully written to "$(system.teamProject) SBOM.json" file"
+  - publish: $(System.DefaultWorkingDirectory)/"$(system.teamProject) SBOM.json"
+
+### VERACODE CONTAINER SECURITY IAC, SCA, SBOM ###
+
+# Requires Container Security Subscription, configure using https://docs.veracode.com/r/Veracode_CLI #
+
+- job: ContainerSecurityIaC
+  dependsOn: UploadandScanSASTSCA
+  steps:
+  - task: Bash@3
+    displayName: Conduct Scan
+    inputs:
+      targetType: inline
+      script: |
+        pwd
+        export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
+        export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
+        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.txt
+        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./containerresults.json
+        ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./SBOM.json
+        cat ./containerresults.txt
+        echo Generated table, JSON and SBOM artifacts
+    continueOnError: true
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store results as table artifact
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/containerresults.txt'
+      artifact: 'Container Security .txt results'
+      publishLocation: 'pipeline'
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store results as JSON artifact
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/containerresults.json'
+      artifact: 'Container Security .json results'
+      publishLocation: 'pipeline'
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store results as SBOM artifact
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/SBOM.json'
+      artifact: 'Container Security SBOM results'
+      publishLocation: 'pipeline'
+
+  - task: Bash@3
+    displayName: Check Container Policy pass/fail
+    inputs:
+      targetType: 'inline'
+      script: |
+        PASS=$(cat $(System.DefaultWorkingDirectory)/containerresults.json | jq -r '."policy-passed"' )
+        #PASS='passed'
+        echo "Passed policy: $PASS"
+        if [ $PASS == 'false' ]
+        then
+          exit 1
+        else
+          exit 0
+        fi
+    continueOnError: true
