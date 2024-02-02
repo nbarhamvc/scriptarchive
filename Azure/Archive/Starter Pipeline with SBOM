@@ -134,8 +134,8 @@ jobs:
 # Submits API call for SBOM from latest Application Profile Policy Scan #
 # Edit API call to change from cyclonedx to spdx #
 
-- job: CreateSBOM
-  dependsOn: BuildforUploadtoVeracode
+- job: PolicyScanSBOM
+  dependsOn: UploadandScanSASTSCA
   steps:
   - task: Bash@3
     displayName: Generate App Profile SBOM
