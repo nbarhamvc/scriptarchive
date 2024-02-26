@@ -184,11 +184,6 @@ jobs:
 
     steps:
 
-    - name: Check out code
-      uses: actions/checkout@v4
-      with:
-        ref: 'dev'
-
     - name: Veracode Container/IaC/Secrets Scanning GitHub Action
       uses: veracode/container_iac_secrets_scanning@v1.0.0
       with:
