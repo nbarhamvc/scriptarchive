@@ -183,7 +183,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        ref: 'dev'
+
     - name: Veracode Container/IaC/Secrets Scanning GitHub Action
       uses: veracode/container_iac_secrets_scanning@v1.0.0
       with:
@@ -191,7 +196,7 @@ jobs:
         vkey: ${{secrets.VERACODE_API_KEY}}
         github-token: ${{ github.token }}
         command: scan
-        source: https://github.com/bridgecrewio/terragoat
+        source: .
         format: json
         type: repo
         fail_build: true
