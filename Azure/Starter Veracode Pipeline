@@ -137,19 +137,19 @@ jobs:
   dependsOn: UploadandScanSASTSCA
   steps:
   - task: Bash@3
-    displayName: Conduct Scan
+    displayName: Conduct Container/IaC Scan
     inputs:
       targetType: inline
       script: |
-        pwd
-        export VERACODE_API_KEY_ID=$(VERACODE_API_ID)
-        export VERACODE_API_KEY_SECRET=$(VERACODE_API_KEY)
         curl -fsS https://tools.veracode.com/veracode-cli/install | sh
         ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format table --output ./containerresults.txt
         ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./containerresults.json
         ./veracode scan --source $(System.DefaultWorkingDirectory) --type directory --format json --output ./SBOM.json
         cat ./containerresults.txt
         echo Generated table, JSON and SBOM artifacts
+    env:
+      VERACODE_API_KEY_ID: $(VERACODE_API_ID)
+      VERACODE_API_KEY_SECRET: $(VERACODE_API_KEY)
     continueOnError: true
 
   - task: PublishPipelineArtifact@1
