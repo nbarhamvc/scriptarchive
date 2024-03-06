@@ -26,7 +26,7 @@ pipelines:
           name: Veracode Pipeline Scan SAST
           image: veracode/pipeline-scan
           script:
-            - java -jar /opt/veracode/pipeline-scan.jar --veracode_api_id ${VERACODE_API_ID} --veracode_api_key ${VERACODE_API_KEY} --file target/verademo.war || true
+            - java -jar /opt/veracode/pipeline-scan.jar --veracode_api_id ${VERACODE_API_ID} --veracode_api_key ${VERACODE_API_KEY} --file target/<INSERTFILEFORSCANNING> || true
 
 # Agent-based SCA scan submission, scans repo directly, does not require built artifact. 
 # Requires SRCCLR_API_TOKEN to be generated on platform then saved as secret for use here.
