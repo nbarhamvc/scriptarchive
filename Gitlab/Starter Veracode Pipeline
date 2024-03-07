@@ -107,12 +107,10 @@ Policy or Sandbox SAST, SCA Scan:
     script: |
         apt update
         apt install -y jq
-        export VERACODE_API_KEY_ID=${VERACODE_API_ID}
-        export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
         curl -fsS https://tools.veracode.com/veracode-cli/install | sh
         ./veracode scan --source . --type directory --format table --output ./containerresults.txt
         ./veracode scan --source . --type directory --format json --output ./containerresults.json
-        ./veracode scan --source . --type directory --format json --output ./SBOM.json
+        ./veracode sbom --source . --type directory --format json --output ./SBOM.json
         cat ./containerresults.txt
         echo Generated table, JSON and SBOM artifacts
         PASS=$(cat ./containerresults.json | jq -r '."policy-passed"' )
@@ -124,4 +122,7 @@ Policy or Sandbox SAST, SCA Scan:
         else
           exit 0
         fi
+    variables:
+        VERACODE_API_KEY_ID: ${VERACODE_API_ID}
+        VERACODE_API_KEY_SECRET: ${VERACODE_API_KEY}
     allow_failure: true
