@@ -185,7 +185,7 @@ jobs:
     steps:
 
     - name: Veracode Container/IaC/Secrets Scanning GitHub Action
-      uses: veracode/container_iac_secrets_scanning@v1.0.0
+      uses: veracode/container_iac_secrets_scanning@v1.0.2
       with:
         vid: ${{secrets.VERACODE_API_ID}}
         vkey: ${{secrets.VERACODE_API_KEY}}
