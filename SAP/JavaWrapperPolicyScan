@@ -2,9 +2,9 @@
 # References https://help.sap.com/docs/continuous-integration-and-delivery/sap-continuous-integration-and-delivery/additional-credentials for setting Veracode API ID & Key as variables/secrets, before running the below.
 # From SAP documentation, believe these commands could either be run in-line in the config.yml file, or you could store in a shell script in the GitHub repo, and have the config.yml download/run the script if preferred.
 # The below assumes a .zip of the applicaiton has already been created in GitHub, per the packaging guidance at https://docs.veracode.com/r/compilation_jscript. If it is possible in SAP to clone the GitHub repo and create a .zip of it locally, this might be preferable.
-# For the purposes of testing, I've referenced my demonstration verademo.zip file below. You would replace this with the zip in your GitHub repo instead. 
+# For the purposes of testing, I've referenced a demo vulnerable JavaScript app below. You would replace this with a zip of your GitHub repo to be scanned instead. 
 # Once the scan completes, the Java wrapper should return an exit code of 1 if the application has failed the Veracode Policy, or 0 if it passes the Policy. An exit code of 1 may cause the SAP pipeline to fail (to be confirmed with SAP consultant).
 
 stages:
   VeracodeScan:
-    command: "curl -O "https://raw.githubusercontent.com/nbarhamvc/ziptest/main/verademo.zip" && curl -O "https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/24.4.13.0/vosp-api-wrappers-java-24.4.13.0.jar" && java -jar vosp-api-wrappers-java-24.4.13.0.jar -vid $SAPIDcredential -vkey $SAPKcredential -action UploadandScan -appname "AppSec_Demo" -createprofile false -version enteruniquenameforscan -filepath appzip.zip -scantimeout 90"
+    command: "curl -sL -O https://github.com/veracode-demo-labs/node-js-api/archive/main.zip" && curl -O "https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/24.4.13.0/vosp-api-wrappers-java-24.4.13.0.jar" && java -jar vosp-api-wrappers-java-24.4.13.0.jar -vid $SAPIDcredential -vkey $SAPKEYcredential -action UploadandScan -appname "AppSec_Demo" -createprofile false -version $SAPuniquebuildvariable -filepath main.zip -scantimeout 90"
