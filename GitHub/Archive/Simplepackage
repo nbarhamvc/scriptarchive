@@ -1,0 +1,33 @@
+name: Simple package and submit
+on: workflow_dispatch
+
+jobs:
+  Checkoutandpackage:
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Code checkout
+      uses: actions/checkout@v4
+    
+    - name: Download Veracode CLI
+      uses: wei/curl@master
+      with:
+        args: -fsS https://tools.veracode.com/veracode-cli/install | sh
+    
+    - name: Package File
+      run: ./veracode package -s . --trust
+
+    - name: Veracode Upload And Scan
+      uses: veracode/veracode-uploadandscan-action@0.2.6
+      with:
+        appname: AppSec_Demo
+        createprofile: true
+        filepath: ./verademo.war
+        version: ${{ github.run_id }}
+        vid: ${{secrets.VERACODE_API_ID}}
+        vkey: ${{secrets.VERACODE_API_KEY}}
+        scantimeout: 90
+        deleteincompletescan: 1
+        scanpollinginterval: 60
+      continue-on-error: false
+        
