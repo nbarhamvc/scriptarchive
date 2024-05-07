@@ -73,8 +73,6 @@ jobs:
         vkey: ${{secrets.VERACODE_API_KEY}}
         file: {filetouploadforVeracodeScanning}
         token: ${{ github.token }}
-        fail_on_severity: VeryHigh,High
-        filtered_json_output_file: filtered_results.json
         fail_build: true
       continue-on-error: true
 
