@@ -1,0 +1,43 @@
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- script: |
+    pip install poetry
+    pip install pipenv
+    poetry export -f requirements.txt --output requirements.txt --without-hashes
+    pipenv lock
+    curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+    ./veracode package -s . -o veracode-artifact -a trust
+
+- task: CmdLine@2
+  displayName: Conduct Scan
+  env:
+    SRCCLR_API_TOKEN: $(SRCCLR_API_TOKEN)
+  inputs:
+    script: |
+      curl -sSL https://download.sourceclear.com/ci.sh | bash -s - scan --update-advisor --allow-dirty
+  continueOnError: true
+
+# - task: PublishPipelineArtifact@1
+#   displayName: Store scan results as artifact
+#   inputs:
+#     targetPath: 'veracode-artifact/veracode-auto-pack-s-python.zip'
+#     artifact: 'Packaged app'
+#     publishLocation: 'pipeline'
+
+# - task: Veracode@3
+#   inputs:
+#     ConnectionDetailsSelection: 'Service Connection'
+#     AnalysisService: 'Veracode platform'
+#     veracodeAppProfile: 'poetrytest'
+#     version: '$(build.buildNumber)'
+#     filepath: 'veracode-artifact/veracode-auto-pack-s-python.zip'
+#     failBuildIfUploadAndScanBuildStepFails: true
+#     importResults: true
+#     failBuildOnPolicyFail: true
+#     maximumWaitTime: '360'
