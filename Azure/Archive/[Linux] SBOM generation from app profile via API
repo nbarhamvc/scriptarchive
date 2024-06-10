@@ -1,9 +1,8 @@
-# Following will generate an SBOM based on Application Profile GUID and store it as an artifact. Edit name on line 17 accordingly to correspond with app profile name.
+# Following will generate an SBOM based on Application Profile GUID and store it as an artifact. Edit name on line 17 accordingly to correspond with your app profile name.
 # Needs VERACODE API ID & KEY stored as credentials
 # Substitute spdx/cyclonedx on line 30 as required
 # Configure line 19 to match the name of the application profile on the Veracode platform
 # Suggest scan name is precursor "-SBOM" for output .json
-
 
 trigger:
 - main
@@ -31,3 +30,25 @@ steps:
       http --check-status --ignore-stdin --auth-type=veracode_hmac -o ./"$(YOURSCANNAME)-SBOM.json" https://api.veracode.com/srcclr/sbom/v1/targets/$appguid/spdx?type=application
       echo "SBOM successfully written to "$(YOURSCANNAME)-SBOM.json" file"
 - publish: $(System.DefaultWorkingDirectory)/$(YOURSCANNAME)-SBOM.json
+
+# Following will generate an SBOM for a Container image using the Veracode CLI tool, see https://docs.veracode.com/r/Veracode_CLI #
+
+  - task: Bash@3
+    displayName: Conduct Container/IaC Scan
+    inputs:
+      targetType: inline
+      script: |
+        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+        ./veracode scan --source alpine:latest --type image --format json --output ./SBOM.json
+        echo SBOM artifact
+    env:
+      VERACODE_API_KEY_ID: $(VERACODE_API_ID)
+      VERACODE_API_KEY_SECRET: $(VERACODE_API_KEY)
+    continueOnError: true
+
+  - task: PublishPipelineArtifact@1
+    displayName: Store results as SBOM artifact
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/SBOM.json'
+      artifact: 'Container Security SBOM results'
+      publishLocation: 'pipeline'
