@@ -33,22 +33,22 @@ steps:
 
 # Following will generate an SBOM for a Container image using the Veracode CLI tool, see https://docs.veracode.com/r/Veracode_CLI #
 
-  - task: Bash@3
-    displayName: Conduct Container/IaC Scan
-    inputs:
-      targetType: inline
-      script: |
-        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
-        ./veracode scan --source alpine:latest --type image --format json --output ./SBOM.json
-        echo SBOM artifact
-    env:
-      VERACODE_API_KEY_ID: $(VERACODE_API_ID)
-      VERACODE_API_KEY_SECRET: $(VERACODE_API_KEY)
-    continueOnError: true
+- task: Bash@3
+  displayName: Conduct Container/IaC Scan
+  inputs:
+    targetType: inline
+    script: |
+      curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+      ./veracode scan --source alpine:latest --type image --format json --output ./SBOM.json
+      echo SBOM artifact
+  env:
+    VERACODE_API_KEY_ID: $(VERACODE_API_ID)
+    VERACODE_API_KEY_SECRET: $(VERACODE_API_KEY)
+  continueOnError: true
 
-  - task: PublishPipelineArtifact@1
-    displayName: Store results as SBOM artifact
-    inputs:
-      targetPath: '$(System.DefaultWorkingDirectory)/SBOM.json'
-      artifact: 'Container Security SBOM results'
-      publishLocation: 'pipeline'
+- task: PublishPipelineArtifact@1
+  displayName: Store results as SBOM artifact
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/SBOM.json'
+    artifact: 'Container Security SBOM results'
+    publishLocation: 'pipeline'
