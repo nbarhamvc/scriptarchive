@@ -15,23 +15,22 @@ jobs:
 
 ### BUILD APP FOR PIPELINE SCAN SAST, UPLOAD AND SCAN SAST, SCA ###
 
-# IMPORTANT: You must package your application correctly per: https://docs.veracode.com/r/compilation_packaging, or using the cheat sheet: https://docs.veracode.com/cheatsheet/ #
+# The below downloads the Veracode CLI tool and attempts to auto-package the application, ready for use by Pipeline Scan SAST and Upload and Scan SAST/SCA (Policy/Sandbox Scan).
+# If this does not work 'out of the box', you will need to add a build step below to package your application correctly per: https://docs.veracode.com/r/compilation_packaging #
 # If after reading the guidance you need additional help packaging, please log into the Veracode web UI and click the 'Schedule a Consultation' button to schedule a call. #
 # Note the team that will join a call to help with packaging will not be able to help with pipeline configuration. Contact your Veracode CSM for this and they will arrange a resource. #
 
-- job: BuildforUploadtoVeracode
+- job: Packageapp
   steps:
-  - task: Maven@3
-    displayName: Maven Build of Vuln App
-    inputs:
-      mavenPomFile: 'pom.xml'
-      mavenOptions: '-Xmx3072m'
-      javaHomeOption: 'JDKVersion'
-      jdkVersionOption: '1.8'
-      jdkArchitectureOption: 'x64'
-      publishJUnitResults: false
-      testResultsFiles: '**/surefire-reports/TEST-*.xml'
-      goals: 'package'
+    - script: |
+        curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+        ./veracode package -s . -o $(System.DefaultWorkingDirectory)/veracode-artifacts -a trust
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(System.DefaultWorkingDirectory)/veracode-artifacts'
+        artifact: 'veracode-artifacts'
+        publishLocation: 'pipeline'
 
 ### VERACODE AGENT-BASED SCA ###
 
@@ -59,8 +58,15 @@ jobs:
 # Configure further using https://docs.veracode.com/r/r_pipeline_scan_commands. Requires SAST product subscription #
 
 - job: PipelineScanSAST
-  dependsOn: BuildforUploadtoVeracode
+  dependsOn: Packageapp
   steps:
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: 'current'
+      artifactName: 'veracode-artifacts'
+      targetPath: '$(Pipeline.Workspace)/veracode-artifacts'
+
   - task: Bash@3
     displayName: Conduct Scan
     inputs:
@@ -68,15 +74,9 @@ jobs:
       script: |
         curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
         unzip -o pipeline-scan-LATEST.zip
-        java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f {yourcompiled/packagedfiletouploadtoVeracode}
-    continueOnError: true
+        java -jar pipeline-scan.jar -vid $(VERACODE_API_ID) -vkey $(VERACODE_API_KEY) -f $(Pipeline.Workspace)/veracode-artifacts/<SPECIFYINDIVIDUALFILETOSCAN>
 
-  - task: PublishPipelineArtifact@1
-    displayName: Store scan results as artifact
-    inputs:
-      targetPath: '$(System.DefaultWorkingDirectory)/results.json'
-      artifact: 'Pipeline Scan JSON results'
-      publishLocation: 'pipeline'
+    continueOnError: true
 
 ### VERACODE UPLOAD AND SCAN SAST, SCA (TARGETING POLICY OR SANDBOX) ###
 
@@ -88,8 +88,15 @@ jobs:
 # Requires SAST product subscription. Note: using 'createProfile' as true will consume an app license, if you're using that subscription type #
 
 - job: UploadandScanSASTSCA
-  dependsOn: BuildforUploadtoVeracode
+  dependsOn: Packageapp
   steps:
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: 'current'
+      artifactName: 'veracode-artifacts'
+      targetPath: '$(Pipeline.Workspace)/veracode-artifacts'
+
   - task: Veracode@3
     displayName: Conduct Policy or Sandbox Scan
     inputs:
@@ -97,7 +104,7 @@ jobs:
       AnalysisService: 'Veracode Platform'
       veracodeAppProfile: '$(system.teamProject)'
       version: '$(build.buildNumber)'
-      filepath: '{yourcompiled/packagedfiletouploadtoVeracode}'
+      filepath: '$(Pipeline.Workspace)/veracode-artifacts'
       createProfile: true
       failBuildIfUploadAndScanBuildStepFails: true
       importResults: true
