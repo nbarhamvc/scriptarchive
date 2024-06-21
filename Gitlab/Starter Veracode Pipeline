@@ -93,7 +93,7 @@ Policy or Sandbox SAST, SCA Scan:
             -scanpollinginterval 60
             -autoscan true
             -deleteincompletescan 1
-            -filepath veracode-artifacts/{file(s)touploadforscanningwithVeracode}
+            -filepath veracode-artifacts
             -version "GL Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
             -scantimeout 90
     allow_failure: true
