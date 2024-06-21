@@ -27,7 +27,7 @@ Build app:
           ./veracode package -s . -o veracode-artifacts -a trust
     artifacts:
             paths:
-                - veracode-artifact/
+                - veracode-artifacts/
 
 ### VERACODE AGENT-BASED SCA ###
 
