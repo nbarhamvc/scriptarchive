@@ -36,7 +36,7 @@ jobs:
 
 # Generate API token via web UI. Configure using https://docs.veracode.com/r/Setting_Up_Agent_Based_Scans #
 # Scans repository directly, instead of using compiled/packaged artifacts. #
-# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in GitLab. #
+# Requires a SRCCLR_API_TOKEN be generated in the Veracode platform UI first and stored as a secret in Azure. #
 # Requires SCA product subscription. #
 
 - job: AgentbasedSCA
